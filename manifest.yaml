@@ -1,0 +1,38 @@
+version: "2"
+
+name: Airdrop Template Snap-in
+description: A template repository for creating Airdrop Snap-ins
+
+service_account:
+  display_name: Airdrop Template Bot
+
+functions:
+  - name: extraction
+    description: Extraction function for the template snap-in
+
+# TO CHANGE
+keyring_types:
+  - id: basic-freshdesk-connection
+    name: Basic Freshdesk Connection
+    description: Basic Freshdesk Connection
+    kind: "Secret"
+    is_subdomain: true
+    secret_config:
+      secret_transform: '.token+":X" | @base64'
+      fields:
+        - id: token
+          name: Token
+          description: Freshdesk API token
+      token_verification:
+        url: "https://[SUBDOMAIN].freshdesk.com/api/v2/tickets"
+        method: "GET"
+        headers:
+          Authorization: "Basic [API_KEY]"
+
+imports:
+  - slug: template-extractor
+    display_name: Template extractor
+    description: Basic template extractor
+    extractor_function: extraction
+    allowed_connection_types:
+      - basic-freshdesk-connection
