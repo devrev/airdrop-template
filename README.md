@@ -54,3 +54,7 @@ NOTE: This process may take some time. Command authenticates you to the org usin
 #### Q: Snap-in version `build/deployment failed` after the `Waiting for snap-in version to be ready...` message
 
     A: The snap-in version could not be built. Check the logs by running the DevRev CLI command `devrev snap_in_package logs`. For prettier UI, pipe the output to `jq`
+
+### Q: `Token is expired` when deploying or cleaning up.
+    
+    A: Authentication token to the `DEV_ORG` has expired. Run `make auth` to reconnect to the organization.

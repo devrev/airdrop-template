@@ -10,11 +10,10 @@ functions:
   - name: extraction
     description: Extraction function for the template snap-in
 
-# TO CHANGE
 keyring_types:
-  - id: basic-freshdesk-connection
-    name: Basic Freshdesk Connection
-    description: Basic Freshdesk Connection
+  - id: example-connection
+    name: Example Connection
+    description: Example Connection
     kind: "Secret"
     is_subdomain: true
     secret_config:
@@ -22,17 +21,12 @@ keyring_types:
       fields:
         - id: token
           name: Token
-          description: Freshdesk API token
-      token_verification:
-        url: "https://[SUBDOMAIN].freshdesk.com/api/v2/tickets"
-        method: "GET"
-        headers:
-          Authorization: "Basic [API_KEY]"
+          description: Example API token
 
 imports:
   - slug: template-extractor
     display_name: Template extractor
-    description: Basic template extractor
+    description: Example template extractor
     extractor_function: extraction
     allowed_connection_types:
-      - basic-freshdesk-connection
+      - example-connection
