@@ -1,10 +1,10 @@
-import { AirdropEvent, DemoExtractor } from '@devrev/ts-adaas';
+import { AirdropEvent, DemoExtractor as Extractor } from '@devrev/ts-adaas';
 
 const run = async (events: AirdropEvent[]) => {
   for (const event of events) {
-    console.log('Event in airdrop-template-snapin: ' + JSON.stringify(event));
-    const demoExtractor = new DemoExtractor();
-    await demoExtractor.run(event);
+    console.log('Event: ' + JSON.stringify(event));
+    const extractor = new Extractor();
+    await extractor.run(event);
   }
 };
 

@@ -8,8 +8,8 @@
     "payload": {
       "event_type": "EXTRACTION_EXTERNAL_SYNC_UNITS_START",
       "event_context": {
-        "callback_url": "https://api.dev.devrev-eng.ai/internal/airdrop.external-extractor.message",
-        "dev_org_id": "DEV-nrNzNDPC",
+        "callback_url": "https://api.devrev.ai/internal/airdrop.external-extractor.message",
+        "dev_org_id": "DEV-1",
         "dev_user_id": "DEVU-1",
         "mode": "IMPORT",
         "external_sync_unit_id": "devrev",
@@ -24,7 +24,7 @@
       }
     },
     "execution_metadata": {
-      "devrev_endpoint": "https://api.dev.devrev-eng.ai"
+      "devrev_endpoint": "https://api.devrev.ai"
     }
   },
   {
@@ -36,8 +36,8 @@
     "payload": {
       "event_type": "EXTRACTION_METADATA_START",
       "event_context": {
-        "callback_url": "https://api.dev.devrev-eng.ai/internal/airdrop.external-extractor.message",
-        "dev_org_id": "DEV-nrNzNDPC",
+        "callback_url": "https://api.devrev.ai/internal/airdrop.external-extractor.message",
+        "dev_org_id": "DEV-1",
         "dev_user_id": "DEVU-1",
         "mode": "IMPORT",
         "external_sync_unit_id": "devrev",
@@ -52,7 +52,7 @@
       }
     },
     "execution_metadata": {
-      "devrev_endpoint": "https://api.dev.devrev-eng.ai"
+      "devrev_endpoint": "https://api.devrev.ai"
     }
   },
   {
@@ -64,8 +64,8 @@
     "payload": {
       "event_type": "EXTRACTION_DATA_START",
       "event_context": {
-        "callback_url": "https://api.dev.devrev-eng.ai/internal/airdrop.external-extractor.message",
-        "dev_org_id": "DEV-nrNzNDPC",
+        "callback_url": "https://api.devrev.ai/internal/airdrop.external-extractor.message",
+        "dev_org_id": "DEV-1",
         "dev_user_id": "DEVU-1",
         "mode": "IMPORT",
         "external_sync_unit_id": "devrev",
@@ -80,7 +80,7 @@
       }
     },
     "execution_metadata": {
-      "devrev_endpoint": "https://api.dev.devrev-eng.ai"
+      "devrev_endpoint": "https://api.devrev.ai"
     }
   },
   {
@@ -92,8 +92,8 @@
     "payload": {
       "event_type": "EXTRACTION_DATA_CONTINUE",
       "event_context": {
-        "callback_url": "https://api.dev.devrev-eng.ai/internal/airdrop.external-extractor.message",
-        "dev_org_id": "DEV-nrNzNDPC",
+        "callback_url": "https://api.devrev.ai/internal/airdrop.external-extractor.message",
+        "dev_org_id": "DEV-1",
         "dev_user_id": "DEVU-1",
         "mode": "IMPORT",
         "external_sync_unit_id": "devrev",
@@ -108,7 +108,7 @@
       }
     },
     "execution_metadata": {
-      "devrev_endpoint": "https://api.dev.devrev-eng.ai"
+      "devrev_endpoint": "https://api.devrev.ai"
     }
   },
   {
@@ -120,8 +120,8 @@
     "payload": {
       "event_type": "EXTRACTION_ATTACHMENTS_START",
       "event_context": {
-        "callback_url": "https://api.dev.devrev-eng.ai/internal/airdrop.external-extractor.message",
-        "dev_org_id": "DEV-nrNzNDPC",
+        "callback_url": "https://api.devrev.ai/internal/airdrop.external-extractor.message",
+        "dev_org_id": "DEV-1",
         "dev_user_id": "DEVU-1",
         "mode": "IMPORT",
         "external_sync_unit_id": "devrev",
@@ -136,7 +136,7 @@
       }
     },
     "execution_metadata": {
-      "devrev_endpoint": "https://api.dev.devrev-eng.ai"
+      "devrev_endpoint": "https://api.devrev.ai"
     }
   },
     {
@@ -148,8 +148,8 @@
     "payload": {
       "event_type": "EXTRACTION_ATTACHMENTS_CONTINUE",
       "event_context": {
-        "callback_url": "https://api.dev.devrev-eng.ai/internal/airdrop.external-extractor.message",
-        "dev_org_id": "DEV-nrNzNDPC",
+        "callback_url": "https://api.devrev.ai/internal/airdrop.external-extractor.message",
+        "dev_org_id": "DEV-1",
         "dev_user_id": "DEVU-1",
         "mode": "IMPORT",
         "external_sync_unit_id": "devrev",
@@ -164,7 +164,7 @@
       }
     },
     "execution_metadata": {
-      "devrev_endpoint": "https://api.dev.devrev-eng.ai"
+      "devrev_endpoint": "https://api.devrev.ai"
     }
   }
 ]
