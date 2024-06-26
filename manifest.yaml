@@ -1,7 +1,7 @@
 version: "2"
 
 name: ADaaS Template
-description: A template repository for creating Airdrop Snap-ins
+description: A template for creating a new ADaaS snap-in
 
 service_account:
   display_name: Airdrop Template Bot
@@ -17,7 +17,7 @@ keyring_types:
     kind: "Secret"
     is_subdomain: true
     secret_config:
-      secret_transform: '.token' # a JQ query
+      secret_transform: ".token" # a JQ query
       fields:
         - id: token
           name: Token

@@ -8,7 +8,6 @@ This GitHub repository provides a template with example code to implement an Air
 
 2\. Install [jq](https://jqlang.github.io/jq/download/).
 
-
 ## Build, Deploy and Run
 
 1\. Clone Repository:
@@ -21,7 +20,7 @@ This GitHub repository provides a template with example code to implement an Air
 - Rename `Makefile.variable.example` to `Makefile.variable`.
 - In `Makefile.variable` set the slug of your organization, and your email.
 
-NOTE: The current manifest demonstrates usage with a dynamic keyring (Basic Freshdesk Connection) as an example. If you're testing with basic Freshdesk dynamic keyring, you can leave it as is. Otherwise, update this field with the appropriate connection type configuration.
+NOTE: Update this field with the appropriate connection type configuration.
 
 4\. Build the Snap-in using the following command:
 
@@ -52,5 +51,5 @@ NOTE: This process may take some time. Command authenticates you to the org usin
     A: The snap-in version could not be built. Check the logs by running the DevRev CLI command `devrev snap_in_package logs`. For prettier UI, pipe the output to `jq`
 
 ### Q: `Token is expired` when deploying or cleaning up.
-    
+
     A: Authentication token to the `DEV_ORG` has expired. Run `make auth` to reconnect to the organization.
