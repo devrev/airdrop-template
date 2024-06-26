@@ -40,6 +40,7 @@ echo "Creating Snap-in draft..."
 # shellcheck disable=SC2086 # $DR_OPTS is intentionally split here
 DRAFT_OUTPUT=$(devrev snap_in draft $DR_OPTS --snap_in_version "$VERSION_ID")
 jq <<<"$DRAFT_OUTPUT"
+echo "Snap-in draft created. Please go to the Snap-ins page in the DevRev UI to complete the installation process."
 
 # Check if DevRev CLI returned an error (error messages contain the field 'message')
 if ! jq '.message' <<<"$DRAFT_OUTPUT" | grep null >/dev/null; then

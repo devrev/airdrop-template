@@ -21,10 +21,6 @@ This GitHub repository provides a template with example code to implement an Air
 - Rename `Makefile.variable.example` to `Makefile.variable`.
 - In `Makefile.variable` set the slug of your organization, and your email.
 
-3\. Update `manifest.yaml`:
-
-- Modify the `allowed_connection_types` field in the `imports` section to match your Snap-in's connection type.
-
 NOTE: The current manifest demonstrates usage with a dynamic keyring (Basic Freshdesk Connection) as an example. If you're testing with basic Freshdesk dynamic keyring, you can leave it as is. Otherwise, update this field with the appropriate connection type configuration.
 
 4\. Build the Snap-in using the following command:
