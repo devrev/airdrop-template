@@ -4,7 +4,7 @@ echo "Creating Snap-in version..."
 
 # shellcheck disable=SC2086 # $DR_OPTS is intentionally split here
 VER_OUTPUT=$(devrev snap_in_version create-one $DR_OPTS \
-  --path "$PROJECT_ROOT" \
+  --path "." \
   --create-package | tee /dev/tty)
 
 FILTERED_OUTPUT=$(grep "snap_in_version" <<<"$VER_OUTPUT" | grep -o '{.*}')
