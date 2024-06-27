@@ -20,8 +20,6 @@ This GitHub repository provides a template with example code to implement an Air
 - Rename `Makefile.variable.example` to `Makefile.variable`.
 - In `Makefile.variable` set the slug of your organization, and your email.
 
-NOTE: Update this field with the appropriate connection type configuration.
-
 4\. Build the Snap-in using the following command:
 
 ```bash
@@ -34,7 +32,7 @@ make build
 make deploy
 ```
 
-NOTE: This process may take some time. Command authenticates you to the org using the DevRev CLI, prompts you to select the keyring where you saved GitHub PAT and creates a Snap-in package, its Snap-in version, and finally the Snap-in draft.
+NOTE: This process may take some time. Command authenticates you to the org using the DevRev CLI, creates a Snap-in package, its Snap-in version, and finally the Snap-in draft.
 
 6\. After the Snap-in draft is created, install the Snap-in in the DevRev UI (`Settings` -> `Snap-ins` -> `Install snap-in`).
 

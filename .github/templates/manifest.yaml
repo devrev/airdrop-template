@@ -1,0 +1,32 @@
+version: "2"
+
+name: %PRETTY_NAME%
+description: %PRETTY_NAME%
+
+service_account:
+  display_name: %PRETTY_NAME% Bot
+
+functions:
+  - name: extraction
+    description: Extraction function for %PRETTY_NAME%
+
+keyring_types:
+  - id: example-connection
+    name: Example Connection
+    description: Example Connection
+    kind: "Secret"
+    is_subdomain: true
+    secret_config:
+      secret_transform: ".token" # a JQ query
+      fields:
+        - id: token
+          name: Token
+          description: Example API token
+
+imports:
+  - slug: %PROJECT_NAME%
+    display_name: %PRETTY_NAME%
+    description: %PRETTY_NAME%
+    extractor_function: extraction
+    allowed_connection_types:
+      - example-connection
