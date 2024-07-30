@@ -17,8 +17,8 @@ This GitHub repository provides a template with example code to implement an Air
 
 2\. Open the project in your IDE and set up project environment variables, by following these steps:
 
-- Rename `Makefile.variable.example` to `Makefile.variable`.
-- In `Makefile.variable` set the slug of your organization, and your email.
+- Rename `.env.example` to `.env`.
+- In `.env` set the slug of your organization, and your email.
 
 4\. Build the Snap-in using the following command:
 

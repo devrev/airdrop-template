@@ -9,4 +9,4 @@
 
 build.tar.gz
 nohup.out
-Makefile.variable
+.env

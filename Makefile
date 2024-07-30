@@ -1,7 +1,7 @@
-include Makefile.variable
+include .env
 
-# export values in Makefile.variable to be used in the shell scripts
-export $(shell sed 's/=.*//' Makefile.variable)
+# export values in .env to be used in the shell scripts
+export $(shell sed 's/=.*//' .env)
 
 default:
 	$(MAKE) build
