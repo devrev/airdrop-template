@@ -1,0 +1,107 @@
+{
+  "starting_recipe_blueprint": {
+    "external_record_types": {
+      "contacts": {
+        "forward": true,
+        "reverse": false,
+        "shard": {
+          "constructed_custom_fields": {},
+          "devrev_leaf_type": {
+            "object_type": "revu"
+          },
+          "shard": "create_shard",
+          "stock_field_mappings": {
+            "display_name": {
+              "forward": true,
+              "primary_external_field": "name",
+              "reverse": false,
+              "transformation_method": {
+                "transformation_method": "use_directly"
+              }
+            },
+            "email": {
+              "forward": true,
+              "primary_external_field": "email",
+              "reverse": false,
+              "transformation_method": {
+                "transformation_method": "use_directly"
+              }
+            },
+            "full_name": {
+              "forward": true,
+              "primary_external_field": "name",
+              "reverse": false,
+              "transformation_method": {
+                "transformation_method": "use_directly"
+              }
+            },
+            "state": {
+              "forward": true,
+              "reverse": false,
+              "transformation_method": {
+                "enum": "UNASSIGNED",
+                "transformation_method": "use_fixed_value",
+                "value": "enum_value"
+              }
+            },
+            "user_type": {
+              "forward": true,
+              "reverse": false,
+              "transformation_method": {
+                "enum": "IDENTIFIED",
+                "transformation_method": "use_fixed_value",
+                "value": "enum_value"
+              }
+            }
+          }
+        }
+      },
+      "users": {
+        "forward": true,
+        "reverse": false,
+        "shard": {
+          "constructed_custom_fields": {},
+          "devrev_leaf_type": {
+            "object_type": "devu"
+          },
+          "shard": "create_shard",
+          "stock_field_mappings": {
+            "display_name": {
+              "forward": true,
+              "primary_external_field": "name",
+              "reverse": false,
+              "transformation_method": {
+                "transformation_method": "use_directly"
+              }
+            },
+            "email": {
+              "forward": true,
+              "primary_external_field": "email",
+              "reverse": false,
+              "transformation_method": {
+                "transformation_method": "use_directly"
+              }
+            },
+            "full_name": {
+              "forward": true,
+              "primary_external_field": "name",
+              "reverse": false,
+              "transformation_method": {
+                "transformation_method": "use_directly"
+              }
+            },
+            "state": {
+              "forward": true,
+              "reverse": false,
+              "transformation_method": {
+                "enum": "UNASSIGNED",
+                "transformation_method": "use_fixed_value",
+                "value": "enum_value"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

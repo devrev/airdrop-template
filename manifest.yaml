@@ -9,6 +9,8 @@ service_account:
 functions:
   - name: extraction
     description: Extraction function for the template snap-in
+  - name: install_initial_domain_mapping
+    description: Create blueprint and install initial domain mapping
 
 keyring_types:
   - id: example-connection
@@ -30,3 +32,7 @@ imports:
     extractor_function: extraction
     allowed_connection_types:
       - example-connection
+
+hooks:
+  - type: activate
+    function: install_initial_domain_mapping
