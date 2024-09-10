@@ -8,6 +8,7 @@ const run = async (events: AirdropEvent[]) => {
       await installInitialDomainMapping(event, initialDomainMapping);
     } catch (error) {
       console.error('Failed to install initial domain mappings', error);
+      throw error;
     }
   }
 };
