@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "@devrev/ts-adaas": "0.0.3",
-    "axios": "^1.5.1",
+    "axios": "^1.7.7",
     "dotenv": "^16.0.3",
     "js-jsonl": "^1.1.1",
     "yargs": "^17.6.2"
