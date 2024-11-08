@@ -9,6 +9,8 @@ service_account:
 functions:
   - name: extraction
     description: Extraction function for %PRETTY_NAME%
+  - name: install_initial_domain_mapping
+    description: Create blueprint and install initial domain mapping
 
 keyring_types:
   - id: example-connection
@@ -22,11 +24,18 @@ keyring_types:
         - id: token
           name: Token
           description: Example API token
+      token_verification:
+        urL: https://app.devrev.ai/favicon.ico
+        method: GET
 
 imports:
-  - slug: %PROJECT_NAME%
+  - slug: %PROJECT_NAME%-extractor
     display_name: %PRETTY_NAME%
     description: %PRETTY_NAME%
     extractor_function: extraction
     allowed_connection_types:
       - example-connection
+
+hooks:
+  - type: activate
+    function: install_initial_domain_mapping

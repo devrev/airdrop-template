@@ -24,6 +24,9 @@ keyring_types:
         - id: token
           name: Token
           description: Example API token
+      token_verification:
+        url: https://app.devrev.ai/favicon.ico
+        method: GET
 
 imports:
   - slug: template-extractor
