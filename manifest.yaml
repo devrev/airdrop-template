@@ -35,7 +35,7 @@ imports:
     display_name: ADaaS Connector Template
     description:  ADaaS Connector Template
     extractor_function: extraction
-    loading_function: loading
+    loader_function: loading
     allowed_connection_types:
       - example-connection
 
