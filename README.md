@@ -13,7 +13,7 @@ This GitHub repository provides a template with example code to implement an Air
 1\. Clone Repository:
 
 - Either clone this repository or create a new repository from it by clicking the "Use this template" button above.
-- Set the desired repository name for your own copy (e.g., `<organization>-<external system>-adaas`).
+- Set the desired repository name for your own copy (e.g., `<airdrop>-<external system>-snap-in`).
 
 2\. Open the project in your IDE and set up project environment variables, by following these steps:
 
