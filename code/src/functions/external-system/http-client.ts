@@ -1,8 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-import { AirdropEvent } from '@devrev/ts-adaas';
+import { AirdropEvent, ExternalSystemItemLoadingParams, ExternalSystemItemLoadingResponse } from '@devrev/ts-adaas';
 
-export class DummyHttpClient {
+export class HttpClient {
   private apiEndpoint: string;
   private apiToken;
   private defaultHeaders: AxiosRequestConfig['headers'];
@@ -15,10 +15,19 @@ export class DummyHttpClient {
     };
   }
 
-  async getUsers(params: URLSearchParams): Promise<AxiosResponse> {
-    return axios.get(this.apiEndpoint + '/users', {
-      headers: this.defaultHeaders,
-      params,
-    });
+  async createIssue({
+    item,
+    mappers,
+    event,
+  }: ExternalSystemItemLoadingParams): Promise<ExternalSystemItemLoadingResponse> {
+    return { error: 'Could not create an issue in external system.' };
+  }
+
+  async updateIssue({
+    item,
+    mappers,
+    event,
+  }: ExternalSystemItemLoadingParams): Promise<ExternalSystemItemLoadingResponse> {
+    return { error: 'Could not update an issue in external system.' };
   }
 }
