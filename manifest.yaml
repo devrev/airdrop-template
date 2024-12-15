@@ -9,6 +9,8 @@ service_account:
 functions:
   - name: extraction
     description: Extraction function for the template snap-in
+  - name: loading
+    description: Loading function for the template snap-in
   - name: install_initial_domain_mapping
     description: Create blueprint and install initial domain mapping
 
@@ -29,10 +31,11 @@ keyring_types:
         method: GET
 
 imports:
-  - slug: template-extractor
-    display_name: Template extractor
-    description: Example template extractor
+  - slug: adaas-template
+    display_name: ADaaS Connector Template
+    description:  ADaaS Connector Template
     extractor_function: extraction
+    loading_function: loading
     allowed_connection_types:
       - example-connection
 
