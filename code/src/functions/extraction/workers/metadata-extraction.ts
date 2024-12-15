@@ -1,6 +1,6 @@
 import { ExtractorEventType, processTask } from '@devrev/ts-adaas';
 
-import externalDomainMetadata from '../dummy-extractor/external_domain_metadata.json';
+import externalDomainMetadata from '../../external-system/external_domain_metadata.json';
 
 const repos = [
   {

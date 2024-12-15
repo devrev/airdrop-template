@@ -1,6 +1,6 @@
 import { EventType, ExtractorEventType, processTask } from '@devrev/ts-adaas';
 
-import { normalizeAttachment, normalizeIssue, normalizeUser } from '../dummy-extractor/data-normalization';
+import { normalizeAttachment, normalizeIssue, normalizeUser } from '../../external-system/data-normalization';
 
 // Dummy data that originally would be fetched from an external source
 const issues = [
