@@ -37,8 +37,6 @@ const run = async (events: AirdropEvent[]) => {
       initialState,
       workerPath: file,
     });
-
-    console.log('Finished extraction for event: ', event.payload.event_type);
   }
 };
 

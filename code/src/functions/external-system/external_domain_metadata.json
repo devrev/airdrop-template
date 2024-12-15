@@ -1,20 +1,23 @@
 {
+  "schema_version": "v0.2.0",
   "record_types": {
     "issues": {
       "name": "Issues",
+      "is_loadable": true,
       "fields": {
-        "title": {
-          "is_required": true,
-          "type": "text",
-          "name": "Title",
-          "text": {
-            "min_length": 1
-          }
-        },
         "body": {
-          "type": "rich_text",
           "name": "body",
-          "is_required": true
+          "is_required": true,
+          "type": "rich_text"
+        },
+        "creator": {
+          "is_required": true,
+          "type": "reference",
+          "reference": {
+            "refers_to": {
+              "#record:users": {}
+            }
+          }
         },
         "owner": {
           "is_required": true,
@@ -25,13 +28,12 @@
             }
           }
         },
-        "creator": {
+        "title": {
+          "name": "Title",
           "is_required": true,
-          "type": "reference",
-          "reference": {
-            "refers_to": {
-              "#record:users": {}
-            }
+          "type": "text",
+          "text": {
+            "min_length": 1
           }
         }
       }
@@ -39,18 +41,18 @@
     "users": {
       "name": "Users",
       "fields": {
+        "email": {
+          "name": "Email",
+          "is_required": true,
+          "type": "text"
+        },
         "name": {
+          "name": "Name",
           "is_required": true,
           "type": "text",
-          "name": "Name",
           "text": {
             "min_length": 1
           }
-        },
-        "email": {
-          "type": "text",
-          "name": "Email",
-          "is_required": true
         }
       }
     }
