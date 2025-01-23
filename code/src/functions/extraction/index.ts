@@ -24,6 +24,9 @@ function getWorkerPerExtractionPhase(event: AirdropEvent) {
     case EventType.ExtractionDataStart:
     case EventType.ExtractionDataContinue:
       path = __dirname + '/workers/data-extraction';
+    case EventType.ExtractionAttachmentsStart:
+    case EventType.ExtractionAttachmentsContinue:
+      path = __dirname + '/workers/attachments-extraction';
       break;
   }
   return path;

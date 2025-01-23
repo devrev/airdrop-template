@@ -1,13 +1,11 @@
 import {
+  axios,
   ExternalSystemAttachmentStreamingParams,
   ExternalSystemAttachmentStreamingResponse,
-} from 'types/extraction';
-import {
-  processTask,
   ExtractorEventType,
+  processTask,
   serializeAxiosError,
-} from '../../index';
-import { axios } from '../../http/axios-client';
+} from '@devrev/ts-adaas';
 
 const getAttachmentStream = async ({
   item,
@@ -15,25 +13,15 @@ const getAttachmentStream = async ({
 }: ExternalSystemAttachmentStreamingParams): Promise<ExternalSystemAttachmentStreamingResponse> => {
   const { id, url, inline } = item;
 
-  const authorizationHeaders = inline
-    ? {
-        Authorization: event.payload.connection_data.key,
-      }
-    : {};
-
   try {
     const fileStreamResponse = await axios.get(url, {
       responseType: 'stream',
-      headers: authorizationHeaders,
     });
 
     return { httpStream: fileStreamResponse };
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error(
-        'Error while fetching attachment from URL.',
-        serializeAxiosError(error)
-      );
+      console.error('Error while fetching attachment from URL.', serializeAxiosError(error));
     } else {
       console.error('Error while fetching attachment from URL.', error);
     }
