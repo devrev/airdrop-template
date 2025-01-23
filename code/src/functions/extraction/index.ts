@@ -40,9 +40,6 @@ const run = async (events: AirdropEvent[]) => {
       event,
       initialState,
       workerPath: file,
-      options: {
-        isLocalDevelopment: true,
-      },
     });
   }
 };
