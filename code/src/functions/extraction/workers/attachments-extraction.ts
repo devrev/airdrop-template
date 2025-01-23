@@ -47,8 +47,9 @@ processTask({
       await adapter.emit(ExtractorEventType.ExtractionAttachmentsError, {
         error,
       });
+    } else {
+      await adapter.emit(ExtractorEventType.ExtractionAttachmentsDone);
     }
-    await adapter.emit(ExtractorEventType.ExtractionAttachmentsDone);
   },
   onTimeout: async ({ adapter }) => {
     await adapter.postState();
