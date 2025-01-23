@@ -24,6 +24,7 @@ function getWorkerPerExtractionPhase(event: AirdropEvent) {
     case EventType.ExtractionDataStart:
     case EventType.ExtractionDataContinue:
       path = __dirname + '/workers/data-extraction';
+      break;
     case EventType.ExtractionAttachmentsStart:
     case EventType.ExtractionAttachmentsContinue:
       path = __dirname + '/workers/attachments-extraction';
@@ -39,6 +40,9 @@ const run = async (events: AirdropEvent[]) => {
       event,
       initialState,
       workerPath: file,
+      options: {
+        isLocalDevelopment: true,
+      },
     });
   }
 };
