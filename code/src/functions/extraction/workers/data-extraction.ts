@@ -47,18 +47,18 @@ const users = [
 
 const attachments = [
   {
+    url: 'https://link.testfile.org/500MB',
+    id: 'attachment-2',
+    file_name: 'dummy.ico',
+    author_id: 'user-2',
+    parent_id: 'issue-2',
+  },
+  {
     url: 'https://app.dev.devrev-eng.ai/favicon.ico',
     id: 'attachment-1',
     file_name: 'dummy.jpg',
     author_id: 'user-1',
     parent_id: 'issue-1',
-  },
-  {
-    url: 'https://app.dev.devrev-eng.ai/favicon.ico',
-    id: 'attachment-2',
-    file_name: 'dummy.ico',
-    author_id: 'user-2',
-    parent_id: 'issue-2',
   },
 ];
 
