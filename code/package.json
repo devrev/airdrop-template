@@ -1,7 +1,7 @@
 {
-  "name": "adaas-worker",
-  "version": "1.1.0",
-  "description": "",
+  "name": "adaas-connector",
+  "version": "1.1.6",
+  "description": "DevRev ADaaS (Airdrop-as-a-service) Connector",
   "main": "./dist/index.js",
   "scripts": {
     "lint": "eslint --ignore-path .gitignore .",
@@ -55,7 +55,7 @@
     "yargs": "^17.6.2"
   },
   "dependencies": {
-    "@devrev/ts-adaas": "1.1.5",
+    "@devrev/ts-adaas": "^1.1.6",
     "axios": "^1.7.7",
     "dotenv": "^16.0.3",
     "js-jsonl": "^1.1.1",
