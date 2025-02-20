@@ -1,6 +1,11 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-import { AirdropEvent, ExternalSystemItemLoadingParams, ExternalSystemItemLoadingResponse } from '@devrev/ts-adaas';
+import {
+  AirdropEvent,
+  ExternalSystemItem,
+  ExternalSystemItemLoadingParams,
+  ExternalSystemItemLoadingResponse,
+} from '@devrev/ts-adaas';
 
 export class HttpClient {
   private apiEndpoint: string;
@@ -19,7 +24,7 @@ export class HttpClient {
     item,
     mappers,
     event,
-  }: ExternalSystemItemLoadingParams): Promise<ExternalSystemItemLoadingResponse> {
+  }: ExternalSystemItemLoadingParams<ExternalSystemItem>): Promise<ExternalSystemItemLoadingResponse> {
     return { error: 'Could not create an issue in external system.' };
   }
 
@@ -27,7 +32,7 @@ export class HttpClient {
     item,
     mappers,
     event,
-  }: ExternalSystemItemLoadingParams): Promise<ExternalSystemItemLoadingResponse> {
+  }: ExternalSystemItemLoadingParams<ExternalSystemItem>): Promise<ExternalSystemItemLoadingResponse> {
     return { error: 'Could not update an issue in external system.' };
   }
 }

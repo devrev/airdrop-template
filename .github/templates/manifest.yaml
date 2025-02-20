@@ -29,7 +29,7 @@ keyring_types:
         method: GET
 
 imports:
-  - slug: %PROJECT_NAME%-extractor
+  - slug: %PROJECT_NAME%
     display_name: %PRETTY_NAME%
     description: %PRETTY_NAME%
     extractor_function: extraction

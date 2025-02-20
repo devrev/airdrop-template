@@ -7,7 +7,7 @@ function getWorkerPerLoadingPhase(event: AirdropEvent) {
   switch (event.payload.event_type) {
     case EventType.StartLoadingData:
     case EventType.ContinueLoadingData:
-      path = __dirname + '/workers/data-loading';
+      path = __dirname + '/workers/load-data';
       break;
   }
   return path;
