@@ -10,9 +10,9 @@ This GitHub repository provides a template with example code to implement an Air
 
 ## Build, Deploy and Run
 
-1\. Clone Repository:
+1\. Create a new repository:
 
-- Either clone this repository or create a new repository from it by clicking the "Use this template" button above.
+- Create a new repository from this template by clicking the "Use this template" button in the upper right corner and then "Create a new repository".
 - The repository name must start with `airdrop-` (e.g., `airdrop-<external system>-snap-in`).
 
 2\. Open the project in your IDE and set up project environment variables, by following these steps:
