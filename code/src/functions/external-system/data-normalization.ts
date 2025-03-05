@@ -1,6 +1,9 @@
 import { NormalizedAttachment, NormalizedItem } from '@devrev/ts-adaas';
 
 export function normalizeIssue(item: any): NormalizedItem {
+  /* createItemUrl function should return the url of the object in the external system */
+  const createItemUrl = (id: string) => `https://external-system.com/issues/${id}`;
+
   return {
     id: item.id,
     created_date: item.created_date,
@@ -10,6 +13,7 @@ export function normalizeIssue(item: any): NormalizedItem {
       creator: item.creator,
       owner: item.owner,
       title: item.title,
+      item_url_field: createItemUrl(item.id),
     },
   };
 }
