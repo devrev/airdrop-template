@@ -35,6 +35,10 @@
           "text": {
             "min_length": 1
           }
+        },
+        "item_url_field": {
+          "name": "Link to item",
+          "type": "text"
         }
       }
     },

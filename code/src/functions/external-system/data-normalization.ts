@@ -15,6 +15,10 @@ export function normalizeTodoList(item: any): ExternalSyncUnit {
 }
 
 export function normalizeTodo(item: any): NormalizedItem {
+  // createItemUrl function returns the url that points to this item in the external system.
+  // TODO: Adjust this function to your external system.
+  const createItemUrl = (id: string) => `https://external-system.com/todos/${id}`;
+
   return {
     id: item.id,
     created_date: item.created_date,
@@ -24,6 +28,7 @@ export function normalizeTodo(item: any): NormalizedItem {
       creator: item.creator,
       owner: item.owner,
       title: item.title,
+      item_url_field: createItemUrl(item.id), // Url that points to the item in the external system.
     },
   };
 }
