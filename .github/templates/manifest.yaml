@@ -6,6 +6,18 @@ description: %PRETTY_NAME%
 service_account:
   display_name: %PRETTY_NAME% Bot
 
+developer_keyrings:
+  - name: github_access_token
+    description: GitHub access token
+    display_name: GitHub Access Token
+
+build_config:
+  environment_variables:
+    - name: GITHUB_ACCESS_TOKEN
+      description: Token to access GitHub packages
+      type: keyring
+      value: github_access_token
+
 functions:
   - name: extraction
     description: Extraction function for %PRETTY_NAME%

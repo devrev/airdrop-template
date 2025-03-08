@@ -20,9 +20,15 @@ keyring_types:
     description: Example Connection
     kind: "Secret"
     is_subdomain: true
-    external_system_name: "Example" # external system name you are importing from. This system name should start with a capital letter.
+
+    # Name of the external system you are importing from.
+    # This system name should start with a capital letter.
+    external_system_name: "Example"
+
     secret_config:
-      secret_transform: ".token" # a JQ query
+      # The transform is a JQ query
+      secret_transform: ".token"
+
       fields:
         - id: token
           name: Token
