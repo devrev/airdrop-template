@@ -34,7 +34,7 @@ npm ci
 4\. Start the Snap-in development server from the `code` directory:
 
 ```bash
-npm run test:server
+npm run test:server -- local
 ```
 
 This will start the Snap-in server on `http://localhost:8000`.
