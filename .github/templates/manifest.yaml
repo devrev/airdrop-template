@@ -9,6 +9,8 @@ service_account:
 functions:
   - name: extraction
     description: Extraction function for %PRETTY_NAME%
+  - name: loading
+    description: Loading function for $PRETTY_NAME%
   - name: install_initial_domain_mapping
     description: Create blueprint and install initial domain mapping
 
@@ -18,6 +20,7 @@ keyring_types:
     description: Example Connection
     kind: "Secret"
     is_subdomain: true
+    external_system_name: "Example" # external system name you are importing from. This system name should start with a capital letter.
     secret_config:
       secret_transform: ".token" # a JQ query
       fields:
@@ -25,7 +28,7 @@ keyring_types:
           name: Token
           description: Example API token
       token_verification:
-        urL: https://app.devrev.ai/favicon.ico
+        url: https://app.devrev.ai/favicon.ico
         method: GET
 
 imports:
@@ -33,6 +36,7 @@ imports:
     display_name: %PRETTY_NAME%
     description: %PRETTY_NAME%
     extractor_function: extraction
+    loader_function: loading
     allowed_connection_types:
       - example-connection
 
