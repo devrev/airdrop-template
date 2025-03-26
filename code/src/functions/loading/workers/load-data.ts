@@ -22,7 +22,6 @@ processTask({
     });
   },
   onTimeout: async ({ adapter }) => {
-    await adapter.postState();
     await adapter.emit(LoaderEventType.DataLoadingProgress, {
       reports: adapter.reports,
       processed_files: adapter.processedFiles,
