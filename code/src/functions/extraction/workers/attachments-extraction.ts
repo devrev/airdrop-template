@@ -16,6 +16,9 @@ const getAttachmentStream = async ({
   try {
     const fileStreamResponse = await axiosClient.get(url, {
       responseType: 'stream',
+      headers: {
+        'Accept-Encoding': 'identity',
+      },
     });
 
     return { httpStream: fileStreamResponse };
@@ -59,6 +62,7 @@ processTask({
     }
   },
   onTimeout: async ({ adapter }) => {
+    await adapter.postState();
     await adapter.emit(ExtractorEventType.ExtractionAttachmentsProgress, {
       progress: 50,
     });
