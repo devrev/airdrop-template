@@ -1,17 +1,23 @@
 import { AirdropEvent, EventType, spawn } from '@devrev/ts-adaas';
 
-interface DummyExtractorState {
-  issues: { completed: boolean };
+// TODO: Replace with your state interface that will keep track of the
+// extraction progress. For example, the page number, the number of items
+// processed, if the extraction is completed, etc.
+export interface ExtractorState {
+  todos: { completed: boolean };
   users: { completed: boolean };
-  attachemnts: { completed: boolean };
+  attachments: { completed: boolean };
 }
 
-const initialState: DummyExtractorState = {
-  issues: { completed: false },
+// TODO: Replace with your initial state that will be passed to the worker.
+// This state will be used as a starting point for the extraction process.
+export const initialState: ExtractorState = {
+  todos: { completed: false },
   users: { completed: false },
-  attachemnts: { completed: false },
+  attachments: { completed: false },
 };
 
+// TODO (rado): Check if this can be moved to some shared/ folder.
 function getWorkerPerExtractionPhase(event: AirdropEvent) {
   let path;
   switch (event.payload.event_type) {
@@ -36,10 +42,14 @@ function getWorkerPerExtractionPhase(event: AirdropEvent) {
 const run = async (events: AirdropEvent[]) => {
   for (const event of events) {
     const file = getWorkerPerExtractionPhase(event);
-    await spawn<DummyExtractorState>({
+    await spawn<ExtractorState>({
       event,
       initialState,
       workerPath: file,
+
+      // TODO: If needed you can pass additional options to the spawn function.
+      // For example timeout of the lambda, batch size, etc.
+      // options: {},
     });
   }
 };

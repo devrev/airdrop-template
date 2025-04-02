@@ -8,9 +8,11 @@ import {
   serializeAxiosError,
 } from '@devrev/ts-adaas';
 
-const getAttachmentStream = async ({
+// TODO: Replace with your function for fetching attachment streams from the
+// external system. This function should return a stream of the attachment data.
+async function getFileStream({
   item,
-}: ExternalSystemAttachmentStreamingParams): Promise<ExternalSystemAttachmentStreamingResponse> => {
+}: ExternalSystemAttachmentStreamingParams): Promise<ExternalSystemAttachmentStreamingResponse> {
   const { id, url } = item;
 
   try {
@@ -33,17 +35,17 @@ const getAttachmentStream = async ({
 
     return {
       error: {
-        message: 'Error while fetching attachment ' + id + ' from URL.',
+        message: `Failed to fetch attachment ${id} from URL.`,
       },
     };
   }
-};
+}
 
 processTask({
   task: async ({ adapter }) => {
     try {
       const response = await adapter.streamAttachments({
-        stream: getAttachmentStream,
+        stream: getFileStream,
       });
 
       if (response?.delay) {
@@ -63,8 +65,6 @@ processTask({
   },
   onTimeout: async ({ adapter }) => {
     await adapter.postState();
-    await adapter.emit(ExtractorEventType.ExtractionAttachmentsProgress, {
-      progress: 50,
-    });
+    await adapter.emit(ExtractorEventType.ExtractionAttachmentsProgress);
   },
 });

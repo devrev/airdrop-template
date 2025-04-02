@@ -1,7 +1,7 @@
 {
   "additional_mappings": {
     "record_type_mappings": {
-      "issues": {
+      "todos": {
         "default_mapping": {
           "object_type": "issue"
         },

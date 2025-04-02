@@ -1,6 +1,16 @@
-import { NormalizedAttachment, NormalizedItem } from '@devrev/ts-adaas';
+import { ExternalSyncUnit, NormalizedAttachment, NormalizedItem } from '@devrev/ts-adaas';
 
-export function normalizeIssue(item: any): NormalizedItem {
+export function normalizeTodoList(item: any): ExternalSyncUnit {
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    item_count: item.item_count,
+    item_type: item.item_type,
+  };
+}
+
+export function normalizeTodo(item: any): NormalizedItem {
   return {
     id: item.id,
     created_date: item.created_date,
