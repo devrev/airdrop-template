@@ -17,9 +17,12 @@ export class HttpClient {
 
     // TODO: Replace with your API token which will be used to authenticate API
     // calls to the external system. This is passed through the event payload.
+    // Configuration for the token is defined in manifest.yaml.
     this.apiToken = event.payload.connection_data.key;
   }
 
+  // TODO: Replace with the actual function to fetch external sync units from
+  // the external system.
   async getTodoLists(): Promise<any[]> {
     return new Promise((resolve, reject) => {
       resolve([
@@ -34,6 +37,8 @@ export class HttpClient {
     });
   }
 
+  // TODO: Replace with the actual function to fetch list of items from the
+  // external system.
   async getTodos(): Promise<any[]> {
     return new Promise((resolve, reject) => {
       resolve([
@@ -59,6 +64,8 @@ export class HttpClient {
     });
   }
 
+  // TODO: Replace with the actual function to fetch list of users from the
+  // external system.
   async getUsers(): Promise<any[]> {
     return new Promise((resolve, reject) => {
       resolve([
@@ -80,6 +87,8 @@ export class HttpClient {
     });
   }
 
+  // TODO: Replace with the actual function to fetch list of attachments from
+  // the external system.
   async getAttachments(): Promise<any[]> {
     return new Promise((resolve, reject) => {
       resolve([
@@ -101,14 +110,17 @@ export class HttpClient {
     });
   }
 
+  // TODO: Replace with the actual function to create an item in the external system.
   async createTodo(todo: any): Promise<any> {
     return { error: 'Could not create todo in external system.' };
   }
 
+  // TODO: Replace with the actual function to update an item in the external system.
   async updateTodo(todo: any): Promise<any> {
     return { error: 'Could not update todo in external system.' };
   }
 
+  // TODO: Replace with the actual function to create an attachment in the external system.
   async createAttachment(attachment: any): Promise<any> {
     return { error: 'Could not create attachment in external system.' };
   }

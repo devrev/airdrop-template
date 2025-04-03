@@ -1,5 +1,9 @@
 import { ExternalSyncUnit, NormalizedAttachment, NormalizedItem } from '@devrev/ts-adaas';
 
+// TODO: Replace with your actual normalization functions that will be used to
+// normalize the data received from the external system. You can modify the
+// normalization functions to suit your needs. For example, you might want to
+// include additional fields or change the structure of the normalized item.
 export function normalizeTodoList(item: any): ExternalSyncUnit {
   return {
     id: item.id,

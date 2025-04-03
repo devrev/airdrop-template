@@ -10,7 +10,8 @@ import { denormalizeTodo } from '../../external-system/data-denormalization';
 import { HttpClient } from '../../external-system/http-client';
 
 // TODO: Replace with your create function that will be used to make API calls
-// to the external system to create a new item.
+// to the external system to create a new item. Function must return object with
+// id, error or delay depending on the response from the external system.
 async function createTodo({
   item,
   mappers,
@@ -26,7 +27,9 @@ async function createTodo({
 }
 
 // TODO: Replace with your update function that will be used to make API calls
-// to the external system to update an existing item.
+// to the external system to update an existing item. Function must return
+// object with id, error or delay depending on the response from the external
+// system.
 async function updateTodo({
   item,
   mappers,

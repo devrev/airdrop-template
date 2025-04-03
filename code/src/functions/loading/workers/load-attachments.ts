@@ -9,7 +9,8 @@ import {
 import { HttpClient } from '../../external-system/http-client';
 
 // TODO: Replace with your create function that will be used to make API calls
-// to the external system to create a new attachment.
+// to the external system to create a new attachment. Function must return
+// object with http stream or error depending on the response from the external system.
 async function createAttachment({ item, mappers, event }: ExternalSystemItemLoadingParams<ExternalSystemAttachment>) {
   // TODO: Replace with your HTTP client that will be used to make API calls
   // to the external system.

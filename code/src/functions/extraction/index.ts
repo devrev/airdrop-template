@@ -49,7 +49,10 @@ const run = async (events: AirdropEvent[]) => {
 
       // TODO: If needed you can pass additional options to the spawn function.
       // For example timeout of the lambda, batch size, etc.
-      // options: {},
+      // options: {
+      //   timeout: 1 * 1000 * 60, // 1 minute
+      //   batchSize: 50, // 50 items per batch
+      // },
     });
   }
 };

@@ -29,7 +29,7 @@ const repos = [
 // extract the data from the external system.
 interface ItemTypeToExtract {
   name: 'todos' | 'users' | 'attachments';
-  extractFunction: (freshdeskClient: HttpClient) => Promise<any[]>;
+  extractFunction: (client: HttpClient) => Promise<any[]>;
 }
 
 const itemTypesToExtract: ItemTypeToExtract[] = [
