@@ -38,6 +38,17 @@ async function updateTodo({
   // TODO: Replace with your HTTP client that will be used to make API calls
   // to the external system.
   const httpClient = new HttpClient(event);
+
+  // TODO: In case you need to get the external id of the item, you can use
+  // the mappers.getByTargetId function to get the sync mapper record
+  // for the item. The sync mapper record will contain the external id of
+  // the item in the external system.
+  // const syncMapperRecordResponse = await mappers.getByTargetId({
+  //   sync_unit: event.payload.event_context.sync_unit,
+  //   target: item.id.devrev,
+  // });
+  // const todoExternalId = syncMapperRecordResponse.data.sync_mapper_record.external_ids[0];
+
   const todo = denormalizeTodo(item);
 
   const updateTodoResponse = await httpClient.createTodo(todo);
