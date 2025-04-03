@@ -1,7 +1,7 @@
 name: Set up the repository
 on:
-    push:
-        branches: [main]
+  push:
+    branches: [main]
 jobs:
   cleanup:
     name: Set up the repository
@@ -23,24 +23,25 @@ jobs:
           # Project name is lowercase repository name (used in configs)
           PROJECT_NAME="${GITHUB_REPOSITORY,,}" # Of form owner/repo
           PROJECT_NAME="${PROJECT_NAME##*/}" # Just the repo name
-          
+
           # Pretty name is how it's displayed in the README (spaces and starting case)
           # Since it can contain spaces, it has to be escaped in the sed command
           PRETTY_NAME="$(echo "$PROJECT_NAME" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')"
           ESCAPED_PRETTY_NAME="$(echo "$PRETTY_NAME" | sed 's/ /\\ /g')"
-          
+
           echo "Project name: '$PROJECT_NAME'"
           echo "Pretty name: '$PRETTY_NAME'"
-          
+
           echo "Replacing pretty name: %PRETTY_NAME% -> '$PRETTY_NAME'"
           find .github/templates -type f -exec sed -i "s/%PRETTY_NAME%/$ESCAPED_PRETTY_NAME/g" {} \;
-          
+
           echo "Replacing project name: %PROJECT_NAME% -> '$PROJECT_NAME'"
           find .github/templates -type f -exec sed -i "s/%PROJECT_NAME%/$PROJECT_NAME/g" {} \;
-          
+
 
           echo "Moving template files to the root of the repository"
           rm -rf manifest.yaml
+          rm -rf README.md
           mv -f .github/templates/* .
           rm -rf .github
 

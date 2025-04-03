@@ -15,14 +15,15 @@ functions:
     description: Create blueprint and install initial domain mapping
 
 keyring_types:
+  # TODO: Replace with your keyring configuration
   - id: example-connection
     name: Example Connection
     description: Example Connection
     kind: "Secret"
     is_subdomain: true
-    external_system_name: "Example" # external system name you are importing from. This system name should start with a capital letter.
+    external_system_name: "Example"
     secret_config:
-      secret_transform: ".token" # a JQ query
+      secret_transform: ".token"
       fields:
         - id: token
           name: Token
