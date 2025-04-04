@@ -13,17 +13,42 @@ esac
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-# Get the latest version
-echo "Checking latest DevRev CLI version..."
-LATEST_VERSION=$(curl -s https://api.github.com/repos/devrev/cli/releases/latest | grep -o '"tag_name": "v[0-9.]*"' | cut -d'"' -f4 | sed 's/^v//')
+# Prompt for user information
+read -p "Enter your email: " USER_EMAIL
+read -p "Enter your DevRev organization slug: " DEV_ORG
 
-# Download the latest release
-echo "Downloading DevRev CLI version ${LATEST_VERSION}..."
-curl -L "https://github.com/devrev/cli/releases/download/v${LATEST_VERSION}/devrev_${LATEST_VERSION}-linux_${ARCH}.deb" -o "$TMP_DIR/devrev.deb"
+# Create .env file
+cat > .env << EOF
+USER_EMAIL=$USER_EMAIL
+DEV_ORG=$DEV_ORG
+EOF
 
-# Install the deb package
-echo "Installing DevRev CLI..."
-sudo dpkg -i "$TMP_DIR/devrev.deb" || true
-sudo apt-get update && sudo apt-get install -f -y
+install_devrev_cli() {
+    # Get the latest version
+    echo "Checking latest DevRev CLI version..."
+    local version=$(
+        curl -s https://api.github.com/repos/devrev/cli/releases/latest \
+        | grep -o '"tag_name": "v[0-9.]*"' \
+        | cut -d'"' -f4 \
+        | sed 's/^v//'
+    )
 
-echo "DevRev CLI installation complete!"
+    # Download the latest release
+    echo "Downloading DevRev CLI version ${version}..."
+    curl -L \
+        "https://github.com/devrev/cli/releases/download/v${version}/devrev_${version}-linux_${ARCH}.deb" \
+        -o "$TMP_DIR/devrev.deb"
+
+    # Install the deb package
+    echo "Installing DevRev CLI..."
+    sudo dpkg -i "$TMP_DIR/devrev.deb" || true
+    sudo apt-get update && sudo apt-get install -f -y
+}
+
+install_chef_cli() {}
+
+# Install additional tools
+install_devrev_cli
+install_chef_cli
+
+echo "Initialization complete"
