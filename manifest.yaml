@@ -1,13 +1,13 @@
 version: "2"
 
 # TODO: Replace with the name of your Airdrop connector
-name: Dummy Connector
+name: Template Connector
 # TODO: Replace with the description for your Airdrop connector
-description: Dummy Connector for importing dummy data into DevRev
+description: Template Connector for importing dummy data into DevRev
 
 service_account:
   # TODO: Replace with the display name of Airdrop bot
-  display_name: Airdrop Dummy Bot
+  display_name: Airdrop Template Bot
 
 functions:
   - name: extraction
@@ -37,9 +37,9 @@ keyring_types:
 
 imports:
   # TODO: Replace with the slug, display name, and description of your Airdrop connector
-  - slug: airdrop-dummy-snap-in
-    display_name: Dummy Connector
-    description: Dummy Connector for importing dummy data into DevRev
+  - slug: airdrop-template-snap-in
+    display_name: Template Connector
+    description: Template Connector for importing data into DevRev
     # TODO: Replace with the id of keyring type you defined above
     allowed_connection_types:
       - example-connection
