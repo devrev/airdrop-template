@@ -1,6 +1,8 @@
 # Airdrop snap-in template
 
-This GitHub repository provides a template with example code to implement an Airdrop snap-in.
+This GitHub repository provides a template with example code to implement an
+Airdrop snap-in. The template includes a sample implementation of the Snap-in,
+which imports todo lists, todos and users from into DevRev.
 
 ## Prerequisites
 

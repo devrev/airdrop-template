@@ -1,12 +1,12 @@
 import {
   ExternalSystemAttachment,
-  ExternalSystemAttachmentStreamingResponse,
   ExternalSystemItemLoadingParams,
   LoaderEventType,
   processTask,
 } from '@devrev/ts-adaas';
 
 import { HttpClient } from '../../external-system/http-client';
+import { LoaderState } from '../index';
 
 // TODO: Replace with your create function that will be used to make API calls
 // to the external system to create a new attachment. Function must return
@@ -19,7 +19,7 @@ async function createAttachment({ item, mappers, event }: ExternalSystemItemLoad
   return createAttachmentResponse;
 }
 
-processTask({
+processTask<LoaderState>({
   task: async ({ adapter }) => {
     const { reports, processed_files } = await adapter.loadAttachments({
       create: createAttachment,

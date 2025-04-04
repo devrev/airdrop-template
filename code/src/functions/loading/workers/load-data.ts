@@ -8,6 +8,7 @@ import {
 
 import { denormalizeTodo } from '../../external-system/data-denormalization';
 import { HttpClient } from '../../external-system/http-client';
+import { LoaderState } from '../index';
 
 // TODO: Replace with your create function that will be used to make API calls
 // to the external system to create a new item. Function must return object with
@@ -55,7 +56,7 @@ async function updateTodo({
   return updateTodoResponse;
 }
 
-processTask({
+processTask<LoaderState>({
   task: async ({ adapter }) => {
     const { reports, processed_files } = await adapter.loadItemTypes({
       itemTypesToLoad: [

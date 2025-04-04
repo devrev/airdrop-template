@@ -7,7 +7,7 @@ export class HttpClient {
   constructor(event: AirdropEvent) {
     // TODO: Replace with API endpoint of the external system. This is passed through
     // the event payload.
-    this.apiEndpoint = 'https://dummy-api.com';
+    this.apiEndpoint = '<REPLACE_WITH_API_ENDPOINT>';
 
     // TODO: Replace with API token of the external system. This is passed
     // through the event payload. Configuration for the token is defined in manifest.yaml.
