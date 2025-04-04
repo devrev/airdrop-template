@@ -1,13 +1,5 @@
-# IDE-specific configs
-/.vscode/*
-.code-workspace
-/.idea/*
-
-# Allow run configurations / launch files
-!/.idea/runConfigurations
-!/.vscode/launch.json
-!/.vscode/extensions.json
-
+# Release package for the snap-in
 build.tar.gz
-nohup.out
+
+# Environment variables
 .env
