@@ -51,7 +51,7 @@ async function updateTodo({
 
   const todo = denormalizeTodo(item);
 
-  const updateTodoResponse = await httpClient.createTodo(todo);
+  const updateTodoResponse = await httpClient.updateTodo(todo);
   return updateTodoResponse;
 }
 
