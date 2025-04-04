@@ -1,52 +1,50 @@
 version: "2"
 
-# TODO: Replace with the name of your Airdrop connector
-name: Template Connector
-# TODO: Replace with the description for your Airdrop connector
-description: Template Connector for importing dummy data into DevRev
+# When filling out the manifest.yaml, please follow these instructions:
+# 1. Replace all ALL_CAPS_TEMPLATES with the appropriate values for your connector.
+# 2. Name the <VARIABLES> and make sure the references match.
+# 3. Keep all lower case variables as they are.
+
+name: CONNECTOR_NAME
+description: CONNECTOR_DESCRIPTION
 
 service_account:
-  # TODO: Replace with the display name of Airdrop bot
-  display_name: Airdrop Template Bot
+  display_name: CONNECTOR_DISPLAY_NAME
 
 functions:
-  - name: extraction
-    description: Extraction function for the template snap-in
-  - name: loading
-    description: Loading function for the template snap-in
-  - name: install_initial_domain_mapping
-    description: Create blueprint and install initial domain mapping
+  - name: <EXTRACTION_FUNCTION>
+    description: EXTRACTION_FUNCTION_DESCRIPTION
+  - name: <LOADING_FUNCTION>
+    description: LOADING_FUNCTION_DESCRIPTION
+  - name: <INSTALL_DOMAIN_MAPPING>
+    description: INSTALL_DOMAIN_MAPPING_DESCRIPTION
 
 keyring_types:
-  # TODO: Replace with your keyring configuration
-  - id: example-connection
-    name: Example Connection
-    description: Example Connection
-    kind: "Secret"
-    is_subdomain: true
-    external_system_name: "Example"
+  - id: <CONNECTION_ID>
+    name: CONNECTION_NAME
+    description: CONNECTION_DESCRIPTION
+    kind: "Secret" # Authorization type. Either Secret or OAuth
+    is_subdomain: true # Will show subdomain field during connection creation
+    external_system_name: EXTERNAL_SYSTEM_NAME # Name of the external system, for example: Salesforce, Asana, etc.
     secret_config:
-      secret_transform: ".token"
+      secret_transform: ".token" # jq secret tranformation function
       fields:
         - id: token
-          name: Token
-          description: Example API token
+          name: Token # Name of the secret field during connection creation
+          description: TOKEN_DESCRIPTION
       token_verification:
-        url: https://app.devrev.ai/favicon.ico
+        url: URL_TO_VERIFY_TOKEN # Airdrop service will call the url with the token to verify its validity.
         method: GET
 
 imports:
-  # TODO: Replace with the slug, display name, and description of your Airdrop connector
-  - slug: airdrop-template-snap-in
-    display_name: Template Connector
-    description: Template Connector for importing data into DevRev
-    # TODO: Replace with the id of keyring type you defined above
+  - slug: airdrop-CONNECTOR_NAME
+    display_name: IMPORT_DIALOG_DISPLAY_NAME
+    description: IMPORT_DIALOG_DESCRIPTION
+    extractor_function: <EXTRACTION_FUNCTION>
+    loader_function: <LOADING_FUNCTION>
     allowed_connection_types:
-      - example-connection
-
-    extractor_function: extraction
-    loader_function: loading
+      - <CONNECTION_ID>
 
 hooks:
   - type: activate
-    function: install_initial_domain_mapping
+    function: <INSTALL_DOMAIN_MAPPING>

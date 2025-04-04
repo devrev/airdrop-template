@@ -1,5 +1,10 @@
 version: "2"
 
+# When filling out the manifest.yaml, please follow these instructions:
+# 1. Replace all ALL_CAPS_TEMPLATES with the appropriate values for your connector.
+# 2. Name the <VARIABLES> and make sure the references match.
+# 3. Keep all lower case variables as they are.
+
 name: %PRETTY_NAME%
 description: %PRETTY_NAME%
 
@@ -15,31 +20,30 @@ functions:
     description: Create blueprint and install initial domain mapping
 
 keyring_types:
-  # TODO: Replace with your keyring configuration
-  - id: example-connection
-    name: Example Connection
-    description: Example Connection
-    kind: "Secret"
-    is_subdomain: true
-    external_system_name: "Example"
+  - id: pat-connection
+    name: %PRETTY_NAME% Connection
+    description: %PRETTY_NAME% Connection
+    kind: "Secret" # Authorization type. Either Secret or OAuth
+    is_subdomain: true # Will show subdomain field during connection creation
+    external_system_name: EXTERNAL_SYSTEM_NAME # Name of the external system, for example: Salesforce, Asana, etc.
     secret_config:
-      secret_transform: ".token"
+      secret_transform: ".token" # jq secret tranformation function
       fields:
         - id: token
-          name: Token
+          name: Token # Name of the secret field during connection creation
           description: Example API token
       token_verification:
-        url: https://app.devrev.ai/favicon.ico
+        url: https://app.devrev.ai/favicon.ico # Airdrop service will call the url with the token to verify its validity.
         method: GET
 
 imports:
   - slug: %PROJECT_NAME%
     display_name: %PRETTY_NAME%
-    description: %PRETTY_NAME%
+    description: %PRETTY_NAME% description
     extractor_function: extraction
     loader_function: loading
     allowed_connection_types:
-      - example-connection
+      - pat-connection
 
 hooks:
   - type: activate
