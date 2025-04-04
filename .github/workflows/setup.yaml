@@ -38,12 +38,13 @@ jobs:
           echo "Replacing project name: %PROJECT_NAME% -> '$PROJECT_NAME'"
           find .github/templates -type f -exec sed -i "s/%PROJECT_NAME%/$PROJECT_NAME/g" {} \;
 
-
           echo "Moving template files to the root of the repository"
-          rm -rf manifest.yaml
-          rm -rf README.md
+          rm -rf manifest.yaml README.md
           mv -f .github/templates/* .
+          mv .github/dependabot.yml .
           rm -rf .github
+          mkdir .github
+          mv dependabot.yml .github/
 
       - name: Commit
         run: |
