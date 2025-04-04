@@ -1,6 +1,12 @@
 import { AirdropEvent, EventType, spawn } from '@devrev/ts-adaas';
 
+// TODO: If needed, you can replace this with state interface that will keep
+// track of the loading progress.
 export interface LoaderState {}
+
+// TODO: Replace with your initial state that will be passed to the worker.
+// This state will be used as a starting point for the loading process.
+export const initialLoaderState: LoaderState = {};
 
 function getWorkerPerLoadingPhase(event: AirdropEvent) {
   let path;
@@ -22,7 +28,7 @@ const run = async (events: AirdropEvent[]) => {
     const file = getWorkerPerLoadingPhase(event);
     await spawn<LoaderState>({
       event,
-      initialState: {},
+      initialState: initialLoaderState,
       workerPath: file,
     });
   }

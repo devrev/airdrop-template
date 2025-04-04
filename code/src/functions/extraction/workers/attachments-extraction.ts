@@ -8,7 +8,7 @@ import {
   serializeAxiosError,
 } from '@devrev/ts-adaas';
 
-// TODO: Replace with your function for fetching attachment streams from the
+// TODO: Replace with function for fetching attachment streams from the
 // external system. This function should return a stream of the attachment data.
 async function getFileStream({
   item,

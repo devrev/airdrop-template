@@ -11,13 +11,12 @@ export interface ExtractorState {
 
 // TODO: Replace with your initial state that will be passed to the worker.
 // This state will be used as a starting point for the extraction process.
-export const initialState: ExtractorState = {
+export const initialExtractorState: ExtractorState = {
   todos: { completed: false },
   users: { completed: false },
   attachments: { completed: false },
 };
 
-// TODO (rado): Check if this can be moved to some shared/ folder.
 function getWorkerPerExtractionPhase(event: AirdropEvent) {
   let path;
   switch (event.payload.event_type) {
@@ -44,7 +43,7 @@ const run = async (events: AirdropEvent[]) => {
     const file = getWorkerPerExtractionPhase(event);
     await spawn<ExtractorState>({
       event,
-      initialState,
+      initialState: initialExtractorState,
       workerPath: file,
 
       // TODO: If needed you can pass additional options to the spawn function.

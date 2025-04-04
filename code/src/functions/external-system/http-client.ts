@@ -1,23 +1,16 @@
-import {
-  AirdropEvent,
-  ExternalSystemAttachmentStreamingResponse,
-  ExternalSystemItem,
-  ExternalSystemItemLoadingParams,
-  ExternalSystemItemLoadingResponse,
-} from '@devrev/ts-adaas';
+import { AirdropEvent } from '@devrev/ts-adaas';
 
 export class HttpClient {
   private apiEndpoint: string;
   private apiToken: string;
 
   constructor(event: AirdropEvent) {
-    // TODO: Replace with your API endpoint which will be used to make API calls
-    // to the external system.
+    // TODO: Replace with API endpoint of the external system. This is passed through
+    // the event payload.
     this.apiEndpoint = 'https://dummy-api.com';
 
-    // TODO: Replace with your API token which will be used to authenticate API
-    // calls to the external system. This is passed through the event payload.
-    // Configuration for the token is defined in manifest.yaml.
+    // TODO: Replace with API token of the external system. This is passed
+    // through the event payload. Configuration for the token is defined in manifest.yaml.
     this.apiToken = event.payload.connection_data.key;
   }
 
@@ -29,7 +22,7 @@ export class HttpClient {
         {
           id: '1',
           name: 'Todo List',
-          description: 'This is a todo list project',
+          description: 'This is a todo list',
           item_count: 2,
           item_type: 'todos',
         },

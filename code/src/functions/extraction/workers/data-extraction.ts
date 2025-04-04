@@ -4,11 +4,10 @@ import { normalizeAttachment, normalizeTodo, normalizeUser } from '../../externa
 import { HttpClient } from '../../external-system/http-client';
 import { ExtractorState } from '../index';
 
-// TODO: Replace repos with your actual repos that will be used to store the
+// TODO: Replace with actual repos that will be used to store the
 // data extracted from the external system. For example, you might want to
-// create repos for todos, users, and attachments. Also replace normalization
-// functions with your actual normalization functions that will be used to
-// normalize the data received from the external system.
+// create repos for todos, users, and attachments. Also replace and modify
+// the normalization functions which are used to normalize the data.
 const repos = [
   {
     itemType: 'todos',
@@ -24,9 +23,10 @@ const repos = [
   },
 ];
 
-// TODO: Replace with your item types to extract and their corresponding extract
-// functions. Later use this data to easier iterate over the item types and
-// extract the data from the external system.
+// TODO: Replace with item types you want to extract from the external system.
+// Also replace the extract functions with the actual functions that will be
+// used to extract the data. You can use this to easier iterate over the item
+// types and extract them.
 interface ItemTypeToExtract {
   name: 'todos' | 'users' | 'attachments';
   extractFunction: (client: HttpClient) => Promise<any[]>;
@@ -51,7 +51,7 @@ processTask<ExtractorState>({
   task: async ({ adapter }) => {
     adapter.initializeRepos(repos);
 
-    // TODO: Replace with your HTTP client that will be used to make API calls
+    // TODO: Replace with HTTP client that will be used to make API calls
     // to the external system.
     const httpClient = new HttpClient(adapter.event);
 

@@ -13,7 +13,7 @@ processTask({
     adapter.initializeRepos(repos);
 
     // TODO: If needed, add handling for dynamic external domain metadata
-    // extraction here. For example, you might want to call an external API to
+    // extraction here. For example, you might want to call an external system API to
     // get custom fields and their values and append them to the static
     // external domain metadata.
     const externalDomainMetadata = {
