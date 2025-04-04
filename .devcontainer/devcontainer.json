@@ -13,15 +13,12 @@
 			]
 		}
 	},
-	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
 		"ghcr.io/jckimble/devcontainer-features/ngrok:3": {},
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {}
 	},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
 		4040 // ngrok web UI
 	],
-	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": ".devcontainer/init.sh"
 }
