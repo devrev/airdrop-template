@@ -49,6 +49,6 @@ install_chef_cli() {}
 
 # Install additional tools
 install_devrev_cli
-install_chef_cli
+#install_chef_cli
 
 echo "Initialization complete"
