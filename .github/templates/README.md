@@ -1,7 +1,7 @@
-# %PRETTY_NAME%
+# Airdrop <<PRETTY_EXTERNAL_SYSTEM>> snap-in
 
-%PRETTY_NAME% is an Airdrop snap-in that syncs data between an external system and DevRev
-using DevRev's Airdrop platform.
+The Airdrop <<PRETTY_EXTERNAL_SYSTEM>> snap-in syncs data between <<PRETTY_EXTERNAL_SYSTEM>>
+and DevRev using DevRev's Airdrop platform.
 
 ## Prerequisites
 

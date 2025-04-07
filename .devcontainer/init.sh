@@ -45,10 +45,7 @@ install_devrev_cli() {
     sudo apt-get update && sudo apt-get install -f -y
 }
 
-install_chef_cli() {}
-
 # Install additional tools
 install_devrev_cli
-#install_chef_cli
 
 echo "Initialization complete"

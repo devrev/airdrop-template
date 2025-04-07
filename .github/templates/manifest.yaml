@@ -1,50 +1,84 @@
 version: "2"
 
-# When filling out the manifest.yaml, please follow these instructions:
-# 1. Replace all ALL_CAPS_TEMPLATES with the appropriate values for your connector.
-# 2. Name the <VARIABLES> and make sure the references match.
-# 3. Keep all lower case variables as they are.
+# Information about the snap-in.
+# You don't need to change these if you followed the instructions for naming the repository.
+name: Airdrop <<PRETTY_EXTERNAL_SYSTEM>> snap-in
+description: An Airdrop snap-in for syncing data between <<PRETTY_EXTERNAL_SYSTEM>> and DevRev
 
-name: %PRETTY_NAME%
-description: %PRETTY_NAME%
-
+# The name of the service account that your snap-in will use in DevRev.
+# You can change this if you want to (e.g. by including your company name), but usually this is not necessary.
 service_account:
-  display_name: %PRETTY_NAME% Bot
+  display_name: <<PRETTY_EXTERNAL_SYSTEM>> Bot
 
+# Functions that the snap-in exposes.
+# You should not change the names of these, but you can change the descriptions.
 functions:
   - name: extraction
-    description: Extraction function for %PRETTY_NAME%
+    description: Airdrop extraction function for <<PRETTY_EXTERNAL_SYSTEM>>
   - name: loading
-    description: Loading function for $PRETTY_NAME%
+    description: Airdrop loading function for <<PRETTY_EXTERNAL_SYSTEM>>
   - name: install_initial_domain_mapping
-    description: Create blueprint and install initial domain mapping
+    description: Function for creating a blueprint and installing the initial domain mapping
 
+# The types of connections that the snap-in supports.
+# If an external system supports OAuth, then you should use that.
+# Here we have just one example of a keyring, you can see more advanced examples
+# at https://github.com/devrev/snap-in-examples/tree/main/13-keyring-type.
 keyring_types:
   - id: pat-connection
-    name: %PRETTY_NAME% Connection
-    description: %PRETTY_NAME% Connection
-    kind: "Secret" # Authorization type. Either Secret or OAuth
-    is_subdomain: true # Will show subdomain field during connection creation
-    external_system_name: EXTERNAL_SYSTEM_NAME # Name of the external system, for example: Salesforce, Asana, etc.
+
+    # Connection details that are showed when creating a connection in the DevRev app.
+    name: <<PRETTY_EXTERNAL_SYSTEM>> Connection
+    description: Connection details for authenticating with <<PRETTY_EXTERNAL_SYSTEM>>
+    external_system_name: <<PRETTY_EXTERNAL_SYSTEM>>
+
+    # Authorization type, either 'Secret' or 'OAuth'.
+    kind: "Secret"
+
+    # Whether you want to show the subdomain field when creating a connection in the DevRev app.
+    is_subdomain: true
+
+    # Configuration for passing the secret to the external system, if necessary.
     secret_config:
-      secret_transform: ".token" # jq secret tranformation function
+      # JQ secret tranformation function
+      secret_transform: ".token"
+
+      # Fields that are shown during connection creation.
       fields:
         - id: token
-          name: Token # Name of the secret field during connection creation
+          name: Token
           description: Example API token
+
+      # Airdrop will call the URL you set with the token to verify its validity.
+      # Any endpoint that requires authentication and possibly scoped.
       token_verification:
-        url: https://app.devrev.ai/favicon.ico # Airdrop service will call the url with the token to verify its validity.
+        url: https://app.devrev.ai/favicon.ico
         method: GET
 
+# Imports define the external systems that the snap-in will sync data from.
+# If you want, you can support multiple external systems in one snap-in.
 imports:
-  - slug: %PROJECT_NAME%
-    display_name: %PRETTY_NAME%
-    description: %PRETTY_NAME% description
+  # The slug is the machine-readable name for the import.
+  # In the example below, it's automatically taken from the repository name,
+  # so if you used your company name in the repository name, you should update
+  # the slug to contain the external system name.
+  - slug: airdrop-<<EXTERNAL_SYSTEM>>-snap-in
+    display_name: <<PRETTY_EXTERNAL_SYSTEM>>
+    description: Import data from <<PRETTY_EXTERNAL_SYSTEM>> using Airdrop
+
+    # The extractor and loader functions specify which functions from the section
+    # 'functions' above should be called when extracting data from an external
+    # system, or loading data into it.
     extractor_function: extraction
     loader_function: loading
+
+    # The list of connection types that are available for the external system.
     allowed_connection_types:
       - pat-connection
 
+# Hooks enable running function when the snap-in is installed.
+# You should not change the existing hooks, but if you have a specific use case,
+# you can add new ones.
 hooks:
   - type: activate
     function: install_initial_domain_mapping
