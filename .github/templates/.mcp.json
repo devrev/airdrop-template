@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "airdrop": {
+            "command": "chef-cli",
+            "args": ["mcp", "initial-mapping"]
+        }
+    }
+}
