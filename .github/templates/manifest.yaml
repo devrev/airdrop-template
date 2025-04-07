@@ -20,6 +20,14 @@ functions:
   - name: install_initial_domain_mapping
     description: Function for creating a blueprint and installing the initial domain mapping
 
+# Developer keyrings allow you to store global snap-in secrets, e.g. your OAuth app secret.
+# These secrets are set by you and only visible to you.
+# If you're using OAuth, then you need to uncomment this.
+# developer_keyrings:
+#   - name: oauth-app-secret
+#     description: OAuth app secret
+#     display_name: OAuth App Secret
+
 # The types of connections that the snap-in supports.
 # If an external system supports OAuth, then you should use that.
 # Here we have just one example of a keyring, you can see more advanced examples
