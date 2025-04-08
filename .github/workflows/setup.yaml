@@ -55,6 +55,10 @@ jobs:
           rm -rf .github
           mkdir .github
           mv dependabot.yml .github/
+          cp .cursor/mcp.json .mcp.json
+
+          # Create CLAUDE.md from initial-mapping.mdc, removing the header
+          sed '1,/^---$/d' initial-mapping.mdc | sed '1,/^$/d' > CLAUDE.md
 
       - name: Commit
         run: |
