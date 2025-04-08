@@ -64,7 +64,6 @@ keyring_types:
         method: GET
 
 # Imports define the external systems that the snap-in will sync data from.
-# If you want, you can support multiple external systems in one snap-in.
 imports:
   # The slug is the machine-readable name for the import.
   # In the example below, it's automatically taken from the repository name,
