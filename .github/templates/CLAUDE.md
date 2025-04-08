@@ -1,0 +1,11 @@
+When asked to perform airdrop initial mapping:
+
+1. Refer to $PROJECT_ROOT/code/src/functions/external-system/external_domain_metadata.json for the external domain metadata.
+2. The initial mapping file is at $PROJECT_ROOT/code/src/functions/external-system/initial_domain_mapping.json.
+3. Call 'use_mapping' to test out how the initial mapping behaves on the current metadata.
+4. Use MCP tools to manipulate the initial mapping when adding and removing record type mappings, or unmapping fields, or mapping simple fields.
+5. For more complex field mappings (if map_field reports the method is not yet supported) you may edit the mapping file directly.
+6. Refer to the initial_mappings_schema.yaml for its proper format.
+7. If refering to initial_mappings_schema.yaml, always use the 'use_mapping' tool to verify the mapping file is still valid.
+8. Use the 'get_field_options' tool to discover what field mappings are available for the given DevRev fields.
+9. Discuss with the user to clarify the requirements on how they want the external system to be mapped to DevRev!
