@@ -45,7 +45,45 @@ install_devrev_cli() {
     sudo apt-get update && sudo apt-get install -f -y
 }
 
+install_chef_cli() {
+    # Get the latest version
+    echo "Checking latest Chef CLI version..."
+    local version=$(
+        curl -s https://api.github.com/repos/devrev/adaas-chef-cli/releases/latest \
+        | grep -o '"tag_name": "[0-9.]*"' \
+        | cut -d'"' -f4
+    )
+
+    # Download the latest release (always Linux amd64 since we're in a devcontainer)
+    echo "Downloading Chef CLI version ${version}..."
+    curl -L \
+        "https://github.com/devrev/adaas-chef-cli/releases/download/${version}/chef-cli_${version}_Linux_${ARCH}.tar.gz" \
+        -o "$TMP_DIR/chef-cli.tar.gz"
+
+    # Extract the binary
+    echo "Extracting Chef CLI..."
+    tar -xzf "$TMP_DIR/chef-cli.tar.gz" -C "$TMP_DIR"
+
+    # Create bin directory if it doesn't exist
+    mkdir -p "$HOME/bin"
+
+    # Move the binary to bin directory
+    mv "$TMP_DIR/chef-cli" "$HOME/bin/"
+
+    # Make it executable
+    chmod +x "$HOME/bin/chef-cli"
+
+    # Add to PATH if not already there
+    if ! echo "$PATH" | grep -q "$HOME/bin"; then
+        echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+        export PATH="$HOME/bin:$PATH"
+    fi
+
+    echo "Chef CLI installed successfully"
+}
+
 # Install additional tools
 install_devrev_cli
+install_chef_cli
 
 echo "Initialization complete"
