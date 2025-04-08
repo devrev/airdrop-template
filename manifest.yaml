@@ -1,0 +1,92 @@
+version: "2"
+
+# Information about the snap-in.
+# You don't need to change these if you followed the instructions for naming the repository.
+name: Airdrop Todo snap-in
+description: An Airdrop snap-in for syncing data between an example todo system and DevRev
+
+# The name of the service account that your snap-in will use in DevRev.
+# You can change this if you want to (e.g. by including your company name), but usually this is not necessary.
+service_account:
+  display_name: Todo Bot
+
+# Functions that the snap-in exposes.
+# You should not change the names of these, but you can change the descriptions.
+functions:
+  - name: extraction
+    description: Airdrop extraction function for an example todo system
+  - name: loading
+    description: Airdrop loading function for an example todo system
+  - name: install_initial_domain_mapping
+    description: Function for creating a blueprint and installing the initial domain mapping
+
+# Developer keyrings allow you to store global snap-in secrets, e.g. your OAuth app secret.
+# These secrets are set by you and only visible to you.
+# If you're using OAuth, then you need to uncomment this.
+# developer_keyrings:
+#   - name: oauth-app-secret
+#     description: OAuth app secret
+#     display_name: OAuth App Secret
+
+# The types of connections that the snap-in supports.
+# If an external system supports OAuth, then you should use that.
+# Here we have just one example of a keyring, you can see more advanced examples
+# at https://github.com/devrev/snap-in-examples/tree/main/13-keyring-type.
+keyring_types:
+  - id: pat-connection
+
+    # Connection details that are showed when creating a connection in the DevRev app.
+    name: Todo Connection
+    description: Connection details for authenticating with an example todo system
+    external_system_name: Todo
+
+    # Authorization type, either 'Secret' or 'OAuth'.
+    kind: "Secret"
+
+    # Whether you want to show the subdomain field when creating a connection in the DevRev app.
+    is_subdomain: true
+
+    # Configuration for passing the secret to the external system, if necessary.
+    secret_config:
+      # JQ secret tranformation function
+      secret_transform: ".token"
+
+      # Fields that are shown during connection creation.
+      fields:
+        - id: token
+          name: Token
+          description: Example API token
+
+      # Airdrop will call the URL you set with the token to verify its validity.
+      # Any endpoint that requires authentication and possibly scoped.
+      token_verification:
+        url: https://app.devrev.ai/favicon.ico
+        method: GET
+
+# Imports define the external systems that the snap-in will sync data from.
+# If you want, you can support multiple external systems in one snap-in.
+imports:
+  # The slug is the machine-readable name for the import.
+  # In the example below, it's automatically taken from the repository name,
+  # so if you used your company name in the repository name, you should update
+  # the slug to contain the external system name.
+  - slug: airdrop-todo-snap-in
+    display_name: Todo
+    description: Import data from Todo using Airdrop
+
+    # The extractor and loader functions specify which functions from the section
+    # 'functions' above should be called when extracting data from an external
+    # system, or loading data into it.
+    extractor_function: extraction
+    loader_function: loading
+
+    # The list of connection types that are available for the external system.
+    allowed_connection_types:
+      - pat-connection
+
+# Hooks enable running function when the snap-in is installed.
+# You should not change the existing hooks, but if you have a specific use case,
+# you can add new ones.
+hooks:
+  - type: activate
+    function: install_initial_domain_mapping
