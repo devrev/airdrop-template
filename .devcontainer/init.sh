@@ -1,4 +1,6 @@
 #!/bin/sh
+# This script initializes DevRev-specific tools and configuration in the Dev Container.
+
 set -e
 
 # Determine architecture

@@ -5,6 +5,11 @@ and DevRev using DevRev's Airdrop platform.
 
 ## Prerequisites
 
+The repository you just opened can be used in two ways, the easy way is through the use of
+[Dev Containers](https://containers.dev/) (which require Docker), or by manually installing all
+the required tools.
+See below on how to use the repository in either way.
+
 ### Using Dev Containers
 
 The repository contains configuration for running in a [Dev Container](https://containers.dev/),
@@ -15,6 +20,9 @@ Just install the
 [VSCode Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 (JetBrains IDEs already have their Dev Containers extension pre-installed) and open the project.
 The IDE should pick up that the configuration exists and offer to reopen the project in a Dev Container.
+
+If you're using Dev Containers, then run all the commands mentioned in this README from within VSCode (inside the
+Dev Container).
 
 ### Manual Setup
 
@@ -42,7 +50,7 @@ Run the following code from the `code` directory:
 ##### 1. Authenticate to your DevRev organization using the DevRev CLI:
 
 ```sh
-devrev profiles authenticate --org <your DevRev organization slug>
+devrev profiles authenticate --usr <your email> --org <your DevRev organization slug>
 ```
 
 ##### 2. Install NPM dependencies:
@@ -57,7 +65,7 @@ npm ci
 npm run test:server -- local
 ```
 
-##### 4. Start the ngrok tunnel in a separate terminal window:
+##### 4. Start the ngrok tunnel in a separate terminal window (inside VSCode):
 
 ```sh
 ngrok http 8000
@@ -66,7 +74,7 @@ ngrok http 8000
 This will create a tunnel to your local server.
 The ngrok forwarding URL will be displayed in the terminal window.
 
-##### 5. Create a new snap-in version and package:
+##### 5. Create a new snap-in version and package in a separate terminal window (inside VSCode):
 
 Copy the ngrok forwarding URL from the previous step.
 
