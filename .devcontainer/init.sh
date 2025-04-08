@@ -15,15 +15,20 @@ esac
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-# Prompt for user information
-read -p "Enter your email: " USER_EMAIL
-read -p "Enter your DevRev organization slug: " DEV_ORG
+# Only prompt for user information and create .env file if it doesn't exist
+if [ ! -f .env ]; then
+    echo "No .env file found. Creating one..."
+    read -p "Enter your email: " USER_EMAIL
+    read -p "Enter your DevRev organization slug: " DEV_ORG
 
-# Create .env file
-cat > .env << EOF
+    # Create .env file
+    cat > .env << EOF
 USER_EMAIL=$USER_EMAIL
 DEV_ORG=$DEV_ORG
 EOF
+else
+    echo ".env file already exists. Skipping creation."
+fi
 
 install_devrev_cli() {
     # Get the latest version
