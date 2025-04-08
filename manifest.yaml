@@ -60,9 +60,7 @@ keyring_types:
 # Imports define the external systems that the snap-in will sync data from.
 imports:
   # The slug is the machine-readable name for the import.
-  # In the example below, it's automatically taken from the repository name,
-  # so if you used your company name in the repository name, you should update
-  # the slug to contain the external system name.
+  # In the example below, it's automatically taken from the repository name if you used the template.
   - slug: airdrop-todo-snap-in
     display_name: EXTERNAL_SYSTEM
     description: Import data from EXTERNAL_SYSTEM using Airdrop
