@@ -40,7 +40,7 @@ jobs:
           echo "Pretty external system name: '$PRETTY_EXTERNAL_SYSTEM'"
 
           echo "Replacing TODO placeholders in manifest.yaml and README.md"
-          sed -i "s/TODO/$ESCAPED_PRETTY_EXTERNAL_SYSTEM/g" manifest.yaml .github/templates/README.md
+          sed -i "s/EXTERNAL_SYSTEM/$ESCAPED_PRETTY_EXTERNAL_SYSTEM/g" manifest.yaml .github/templates/README.md
           sed -i "s/airdrop-todo-snap-in/airdrop-$EXTERNAL_SYSTEM-snap-in/g" manifest.yaml
 
           echo "Moving template files to the root of the repository"

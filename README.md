@@ -19,6 +19,4 @@ the name according to Step 2 above.
 ## Additional info
 
 While developing the Airdrop snap-in, make sure to refer to the
-[DevRev snap-in developer documentation](https://developer.devrev.ai/public/snapin-development) and
-also specifically to the
-[Airdrop-related sections](https://developer.devrev.ai/public/snapin-development/adaas/overview).
+[Airdrop snap-in documentation](https://developer.devrev.ai/public/snapin-development/adaas/).

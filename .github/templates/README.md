@@ -1,6 +1,7 @@
-# Airdrop TODO snap-in
+# Airdrop EXTERNAL_SYSTEM snap-in
 
-The Airdrop TODO snap-in syncs data between TODO and DevRev using DevRev's Airdrop platform.
+The Airdrop EXTERNAL_SYSTEM snap-in syncs data between EXTERNAL_SYSTEM and
+DevRev using DevRev's Airdrop platform.
 
 ## Prerequisites
 
