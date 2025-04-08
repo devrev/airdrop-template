@@ -39,17 +39,20 @@ jobs:
           echo "External system name: '$EXTERNAL_SYSTEM'"
           echo "Pretty external system name: '$PRETTY_EXTERNAL_SYSTEM'"
 
-          echo "Replacing project name: <<REPO_NAME>> -> '$REPO_NAME'"
+          echo "Replacing project name placeholder in templates: <<REPO_NAME>> -> '$REPO_NAME'"
           find .github/templates -type f -exec sed -i "s/<<REPO_NAME>>/$REPO_NAME/g" {} \;
 
-          echo "Replacing external system name: <<EXTERNAL_SYSTEM>> -> '$EXTERNAL_SYSTEM'"
+          echo "Replacing external system name placeholder in templates: <<EXTERNAL_SYSTEM>> -> '$EXTERNAL_SYSTEM'"
           find .github/templates -type f -exec sed -i "s/<<EXTERNAL_SYSTEM>>/$EXTERNAL_SYSTEM/g" {} \;
 
-          echo "Replacing pretty external system name: <<PRETTY_EXTERNAL_SYSTEM>> -> '$PRETTY_EXTERNAL_SYSTEM'"
+          echo "Replacing pretty external system name placeholder in templates: <<PRETTY_EXTERNAL_SYSTEM>> -> '$PRETTY_EXTERNAL_SYSTEM'"
           find .github/templates -type f -exec sed -i "s/<<PRETTY_EXTERNAL_SYSTEM>>/$ESCAPED_PRETTY_EXTERNAL_SYSTEM/g" {} \;
 
+          echo "Replacing TODO placeholders in manifest.yaml"
+          sed -i "s/TODO/$ESCAPED_PRETTY_EXTERNAL_SYSTEM/g" manifest.yaml
+          sed -i "s/airdrop-todo-snap-in/airdrop-$EXTERNAL_SYSTEM-snap-in/g" manifest.yaml
+
           echo "Moving template files to the root of the repository"
-          rm -rf manifest.yaml README.md
           mv -f .github/templates/* .
           mv .github/dependabot.yml .
           rm -rf .github
