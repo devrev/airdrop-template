@@ -46,10 +46,7 @@ jobs:
 
           echo "Moving template files to the root of the repository"
           mv -f .github/templates/* .
-          mv .github/dependabot.yml .
           rm -rf .github
-          mkdir .github
-          mv dependabot.yml .github/
           cp .cursor/mcp.json .mcp.json
 
           # Create CLAUDE.md from initial-mapping.mdc, removing the header
