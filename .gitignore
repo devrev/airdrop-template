@@ -1,5 +1,13 @@
-# Release package for the snap-in
-build.tar.gz
+# System files
+.DS_Store
 
 # Environment variables
 .env
+
+# Snap-in-specific files
+**/build.tar.gz
+**/extracted_files
+
+# Node.js cache
+**/node_modules
+**/dist
