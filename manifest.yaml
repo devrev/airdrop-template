@@ -57,7 +57,7 @@ keyring_types:
       # and ideally also checks if the token has all the required scopes.
       # TODO: Update the token verification URL to use an actual authenticated endpoint of your external system.
       token_verification:
-        url: https://faketodosystem.com/api/v1/todos
+        url: https://app.devrev.ai/favicon.ico
         method: GET
 
 # Imports define the external systems that the snap-in will sync data from.
