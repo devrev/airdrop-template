@@ -30,7 +30,9 @@ functions:
 # Here we have just one example of a keyring, you can see more advanced examples
 # at https://github.com/devrev/snap-in-examples/tree/main/13-keyring-type.
 keyring_types:
-  - id: pat-connection
+  # The keyring type ID can be whatever you want, but it has to match one of the allowed
+  # connection types in the 'imports' section below.
+  - id: example-pat-connection
 
     # Connection details that are showed when creating a connection in the DevRev app.
     # You can freely change them, but the external system name should have the first letter capitalized.
@@ -53,6 +55,7 @@ keyring_types:
       # Airdrop will call the URL you set with the token to verify its validity.
       # You need to specify an endpoint in your external system that requires authentication
       # and ideally also checks if the token has all the required scopes.
+      # TODO: Update the token verification URL to use an actual authenticated endpoint of your external system.
       token_verification:
         url: https://faketodosystem.com/api/v1/todos
         method: GET
@@ -78,7 +81,7 @@ imports:
     # The list of connection types that are available for the external system.
     # Make sure these are in sync with the keyring types in the 'keyring_types' section above.
     allowed_connection_types:
-      - pat-connection
+      - example-pat-connection
 
 # Hooks enable running function when the snap-in is installed.
 # You should not change the hooks section, except for the function name, if you changed
