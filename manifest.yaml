@@ -5,13 +5,13 @@ version: "2"
 # For more information about manifests, see https://developer.devrev.ai/public/snapin-development/references/manifest.
 
 # General information about the snap-in, which you can change to your liking.
-name: Airdrop EXTERNAL_SYSTEM snap-in
-description: An Airdrop snap-in for syncing data between EXTERNAL_SYSTEM and DevRev
+name: Airdrop Todo snap-in
+description: An Airdrop snap-in for syncing data between Todo and DevRev
 
 # The name of the service account that your snap-in will use in DevRev.
 # You can change the display name value to your liking.
 service_account:
-  display_name: EXTERNAL_SYSTEM Bot
+  display_name: Todo Bot
 
 # Functions that the snap-in exposes.
 # The names of the functions should be in sync with their references in the 'imports' and
@@ -19,9 +19,9 @@ service_account:
 # You can freely change the descriptions of the functions.
 functions:
   - name: extraction
-    description: Airdrop extraction function for EXTERNAL_SYSTEM
+    description: Airdrop extraction function for Todo
   - name: loading
-    description: Airdrop loading function for EXTERNAL_SYSTEM
+    description: Airdrop loading function for Todo
   - name: install_initial_domain_mapping
     description: Function for creating a blueprint and installing the initial domain mapping
 
@@ -34,9 +34,9 @@ keyring_types:
 
     # Connection details that are showed when creating a connection in the DevRev app.
     # You can freely change them, but the external system name should have the first letter capitalized.
-    name: EXTERNAL_SYSTEM Connection
-    description: Connection details for authenticating with EXTERNAL_SYSTEM
-    external_system_name: EXTERNAL_SYSTEM
+    name: Todo Connection
+    description: Connection details for authenticating with Todo
+    external_system_name: Todo
 
     # Configuration for passing the secret to the external system, if necessary.
     # See https://github.com/devrev/snap-in-examples/blob/main/13-keyring-type/custom-keyring-type-basic.yaml
@@ -62,8 +62,8 @@ imports:
   # The slug is the machine-readable name for the import.
   # In the example below, it's automatically taken from the repository name if you used the template.
   - slug: airdrop-todo-snap-in
-    display_name: EXTERNAL_SYSTEM
-    description: Import data from EXTERNAL_SYSTEM using Airdrop
+    display_name: Todo
+    description: Import data from Todo using Airdrop
 
     # The extractor and loader functions specify which functions from the section
     # 'functions' above should be called when extracting data from an external
