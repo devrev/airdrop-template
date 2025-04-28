@@ -5,7 +5,7 @@ version: "2"
 # For more information about manifests, see https://developer.devrev.ai/public/snapin-development/references/manifest.
 
 # General information about the snap-in, which you can change to your liking.
-name: Airdrop Todo snap-in
+name: Todo
 description: An Airdrop snap-in for syncing data between Todo and DevRev
 
 # The name of the service account that your snap-in will use in DevRev.
@@ -82,10 +82,3 @@ imports:
     # Make sure these are in sync with the keyring types in the 'keyring_types' section above.
     allowed_connection_types:
       - example-pat-connection
-
-# Hooks enable running function when the snap-in is installed.
-# You should not change the hooks section, except for the function name, if you changed
-# it above or in your code.
-hooks:
-  - type: activate
-    function: install_initial_domain_mapping

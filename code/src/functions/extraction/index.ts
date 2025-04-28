@@ -1,5 +1,7 @@
 import { AirdropEvent, EventType, spawn } from '@devrev/ts-adaas';
 
+import initialDomainMapping from '../external-system/initial_domain_mapping.json';
+
 // TODO: Replace with your state interface that will keep track of the
 // extraction progress. For example, the page number, the number of items
 // processed, if the extraction is completed, etc.
@@ -45,6 +47,7 @@ const run = async (events: AirdropEvent[]) => {
       event,
       initialState: initialExtractorState,
       workerPath: file,
+      initialDomainMapping,
 
       // TODO: If needed you can pass additional options to the spawn function.
       // For example timeout of the lambda, batch size, etc.
