@@ -22,8 +22,6 @@ functions:
     description: Airdrop extraction function for Todo
   - name: loading
     description: Airdrop loading function for Todo
-  - name: install_initial_domain_mapping
-    description: Function for creating a blueprint and installing the initial domain mapping
 
 # The types of connections that the snap-in supports.
 # If an external system supports OAuth, then you should use that.
