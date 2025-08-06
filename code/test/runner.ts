@@ -13,9 +13,7 @@ deploying any code into production environments.
 */
 
 import bodyParser from 'body-parser';
-import express, { Express, Handler, Request, Response } from 'express';
-
-import process from 'process';
+import express, { Express, Request, Response } from 'express';
 import { functionFactory, FunctionFactoryType } from '../src/function-factory';
 import { HTTPClient, HttpRequest } from './http_client';
 import {
@@ -34,12 +32,9 @@ import {
 
 
 import {
-  Context as SnapInContext,
   ExecuteOperationResult,
   ExecuteOperationResult_SerializationFormat,
-  ExecutionMetadata,
   FunctionExecutionError,
-  FunctionInput,
   OperationOutput,
 } from '@devrev/typescript-sdk/dist/snap-ins';
 
@@ -69,22 +64,21 @@ app.post('/handle/sync', async (req: Request, resp: Response) => {
     return;
   }
   // for sync invokation, wrap in an array
-  const events: any[] = [req.body];
+  const events: unknown[] = [req.body];
   await handleEvent(events, false /* isAsync */, resp);
 });
 
-async function run(f: any, event: any): Promise<any> {
-  let result = await f(event);
+async function run(f: (event: unknown[]) => Promise<unknown>, event: unknown[]): Promise<unknown> {
+  const result = await f(event);
   return result;
 }
 
-async function handleEvent(events: any[], isAsync: boolean, resp: Response) {
+async function handleEvent(events: unknown[], isAsync: boolean, resp: Response) {
   let error;
-  let results: ExecutionResult[] = [];
-  let receivedError = false;
+  const results: ExecutionResult[] = [];
 
   if (!Array.isArray(events)) {
-    let errMsg = 'Invalid request format: body is not an array';
+    const errMsg = 'Invalid request format: body is not an array';
     error = {
       err_type: RuntimeErrorType.InvalidRequest,
       err_msg: errMsg,
@@ -96,7 +90,7 @@ async function handleEvent(events: any[], isAsync: boolean, resp: Response) {
   // if the request is synchronous, there should be a single event
   if (!isAsync) {
     if (events.length > 1) {
-      let errMsg = 'Invalid request format: multiple events provided for synchronous request';
+      const errMsg = 'Invalid request format: multiple events provided for synchronous request';
       error = {
         err_type: RuntimeErrorType.InvalidRequest,
         err_msg: errMsg,
@@ -110,26 +104,24 @@ async function handleEvent(events: any[], isAsync: boolean, resp: Response) {
     resp.status(200).send();
   }
 
-  for (let event of events) {
+  for (const event of events) {
     let result;
-    const functionName: FunctionFactoryType = event.execution_metadata.function_name as FunctionFactoryType;
+    const functionName: FunctionFactoryType = (event as Record<string, unknown>).execution_metadata?.function_name as FunctionFactoryType;
     if (functionName === undefined) {
       error = {
         err_type: RuntimeErrorType.FunctionNameNotProvided,
         err_msg: 'Function name not provided in event',
       } as RuntimeError;
       console.error(error.err_msg);
-      receivedError = true;
     } else {
       const f = functionFactory[functionName];
       try {
         if (f == undefined) {
           error = {
             err_type: RuntimeErrorType.FunctionNotFound,
-            err_msg: `Function ${event.execution_metadata.function_name} not found in factory`,
+            err_msg: `Function ${(event as Record<string, unknown>).execution_metadata?.function_name} not found in factory`,
           } as RuntimeError;
           console.error(error.err_msg);
-          receivedError = true;
         } else {
           result = await run(f, [event]);
         }
@@ -141,10 +133,10 @@ async function handleEvent(events: any[], isAsync: boolean, resp: Response) {
       // Any common post processing goes here. The function returns
       // only if the function execution was by an operation
     }
-    const opResult = await postRun(event, error, result);
+    const opResult = await postRun(event as Record<string, unknown>, error, result);
 
     // Return result.
-    let res: ExecutionResult = {};
+    const res: ExecutionResult = {};
 
     if (opResult !== undefined) {
       res.function_result = opResult;
@@ -164,7 +156,7 @@ async function handleEvent(events: any[], isAsync: boolean, resp: Response) {
 }
 
 // post processing
-async function postRun(event: any, handlerError: HandlerError, result: any) {
+async function postRun(event: Record<string, unknown>, handlerError: HandlerError, result: unknown) {
   console.debug('Function execution complete');
   // Check if the function was invoked by an operation.
   if (isInvokedFromOperation(event)) {
@@ -178,24 +170,24 @@ async function postRun(event: any, handlerError: HandlerError, result: any) {
   return undefined
 }
 
-function isActivateHook(event: any): boolean {
+function isActivateHook(event: Record<string, unknown>): boolean {
   return event.execution_metadata.event_type === 'hook:snap_in_activate';
 }
 
-function isDeactivateHook(event: any): boolean {
+function isDeactivateHook(event: Record<string, unknown>): boolean {
   return event.execution_metadata.event_type === 'hook:snap_in_deactivate';
 }
 
-function isInvokedFromOperation(event: any): boolean {
+function isInvokedFromOperation(event: Record<string, unknown>): boolean {
   return event.execution_metadata.operation_slug !== undefined;
 }
 
-function handleActivateHookResult(event: any, handlerError: HandlerError, result: any) {
-  let update_req: SnapInsSystemUpdateRequest = {
+function handleActivateHookResult(event: Record<string, unknown>, handlerError: HandlerError, result: unknown) {
+  const update_req: SnapInsSystemUpdateRequest = {
     id: event.context.snap_in_id,
     status: SnapInsSystemUpdateRequestStatus.Active,
   };
-  let res = getActivateHookResult(result);
+  const res = getActivateHookResult(result);
   update_req.inputs_values = res.inputs_values;
 
   if (handlerError !== undefined || res?.status === 'error') {
@@ -206,12 +198,12 @@ function handleActivateHookResult(event: any, handlerError: HandlerError, result
   return updateSnapInState(event, update_req);
 }
 
-function handleDeactivateHookResult(event: any, handlerError: HandlerError, result: any) {
-  let update_req: SnapInsSystemUpdateRequest = {
+function handleDeactivateHookResult(event: Record<string, unknown>, handlerError: HandlerError, result: unknown) {
+  const update_req: SnapInsSystemUpdateRequest = {
     id: event.context.snap_in_id,
     status: SnapInsSystemUpdateRequestStatus.Inactive,
   };
-  let res = getDeactivateHookResult(result);
+  const res = getDeactivateHookResult(result);
   update_req.inputs_values = res.inputs_values;
   if (event.payload.force_deactivate) {
     console.debug('Snap-in is being force deactivated, errors ignored');
@@ -232,7 +224,7 @@ function handleDeactivateHookResult(event: any, handlerError: HandlerError, resu
 }
 
 // Update the snap-in status based on hook result.
-async function updateSnapInState(event: any, update_req: SnapInsSystemUpdateRequest) {
+async function updateSnapInState(event: Record<string, unknown>, update_req: SnapInsSystemUpdateRequest) {
   console.debug('Updating snap-in state after running async hook');
   const { secrets } = event.context;
   const client = new HTTPClient({
@@ -252,8 +244,8 @@ async function updateSnapInState(event: any, update_req: SnapInsSystemUpdateRequ
   }
 }
 
-function getActivateHookResult(input: any): ActivateHookResult {
-  let res = {} as ActivateHookResult;
+function getActivateHookResult(input: unknown): ActivateHookResult {
+  const res = {} as ActivateHookResult;
   if (input instanceof Object) {
     if (input.status === 'active' || input.status === 'error') {
       res.status = input.status;
@@ -269,8 +261,8 @@ function getActivateHookResult(input: any): ActivateHookResult {
   return res;
 }
 
-function getDeactivateHookResult(input: any): DeactivateHookResult {
-  let res = {} as DeactivateHookResult;
+function getDeactivateHookResult(input: unknown): DeactivateHookResult {
+  const res = {} as DeactivateHookResult;
   if (input instanceof Object) {
     if (input.status === 'inactive' || input.status === 'error') {
       res.status = input.status;
@@ -287,9 +279,9 @@ function getDeactivateHookResult(input: any): DeactivateHookResult {
 }
 
 async function handleOperationInvocationResult(
-  event: any,
+  event: Record<string, unknown>,
   handlerError: HandlerError,
-  result: any,
+  result: unknown,
 ): Promise<ExecuteOperationResult> {
   if (result === undefined) {
     result = generateOperationOutputFromError(handlerError);
@@ -331,17 +323,18 @@ export type FailedExecutionError = {
 };
 
 function createExecuteOperationResult(
-  responseData: any,
+  responseData: unknown,
   format: ExecuteOperationResult_SerializationFormat,
 ): ExecuteOperationResult {
   let data: string;
 
   try {
     switch (format) {
-      case ExecuteOperationResult_SerializationFormat.Proto:
+      case ExecuteOperationResult_SerializationFormat.Proto: {
         const uint8array: Uint8Array = OperationOutput.encode(responseData).finish();
         data = Buffer.from(uint8array).toString('base64');
         break;
+      }
       case ExecuteOperationResult_SerializationFormat.JSON:
         data = Buffer.from(JSON.stringify(responseData)).toString('base64');
         break;
@@ -359,6 +352,6 @@ function createExecuteOperationResult(
   } as ExecuteOperationResult;
 }
 
-function getOperationExecutionOperationMethod(event: any): string | undefined {
+function getOperationExecutionOperationMethod(event: Record<string, unknown>): string | undefined {
   return event.execution_metadata.operation_method;
 }

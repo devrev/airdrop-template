@@ -20,7 +20,7 @@ interface SetupOptions {
 }
 
 export interface HttpRequest {
-  headers?: any;
+  headers?: Record<string, string>;
   path: string;
   body: unknown;
 }
