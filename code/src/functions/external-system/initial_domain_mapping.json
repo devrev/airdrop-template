@@ -3,6 +3,7 @@
     "record_type_mappings": {
       "todos": {
         "default_mapping": {
+          "object_category": "stock",
           "object_type": "issue"
         },
         "possible_record_type_mappings": [
@@ -14,14 +15,18 @@
               "constructed_custom_fields": {
                 "ext_object_type": {
                   "field_descriptor": {
-                    "allowed_values": ["Issues"],
+                    "allowed_values": ["Todos"],
+                    "data_name": "ext_object_type",
                     "db_name": "ext_object_type",
-                    "default_value": "Issues",
+                    "default_value": "Todos",
                     "description": "The source object type/subtype that the item was created from.",
                     "field_type": "enum",
                     "is_filterable": true,
                     "is_required": true,
                     "name": "ext_object_type",
+                    "oasis": {
+                      "name": "ext_object_type"
+                    },
                     "ui": {
                       "display_name": "External Object Type",
                       "is_hidden_during_create": true,
@@ -31,18 +36,23 @@
                   "transformation_method": {
                     "can_apply_to_null": false,
                     "custom_field_type": {
-                      "allowed_values": ["Issues"],
+                      "allowed_values": ["Todos"],
+                      "data_name": "dummy name",
                       "db_name": "dummy name",
                       "field_type": "enum",
-                      "name": "dummy name"
+                      "name": "dummy name",
+                      "oasis": {
+                        "name": "dummy name"
+                      }
                     },
-                    "forward_jq": "\"Issues\"",
+                    "forward_jq": "\"Todos\"",
                     "transformation_method": "use_raw_jq",
                     "use_primary_input": false
                   }
                 }
               },
               "devrev_leaf_type": {
+                "object_category": "stock",
                 "object_type": "issue"
               },
               "mode": "create_shard",
@@ -50,9 +60,10 @@
                 "applies_to_part_id": {
                   "forward": true,
                   "reverse": false,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
                     "is_array": false,
                     "leaf_type": {
+                      "object_category": "stock",
                       "object_type": "product"
                     },
                     "transformation_method": "use_devrev_record"
@@ -62,7 +73,7 @@
                   "forward": true,
                   "primary_external_field": "body",
                   "reverse": true,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
                     "transformation_method": "use_directly"
                   }
                 },
@@ -70,7 +81,15 @@
                   "forward": true,
                   "primary_external_field": "creator",
                   "reverse": true,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
+                    "transformation_method": "use_directly"
+                  }
+                },
+                "item_url_field": {
+                  "forward": true,
+                  "primary_external_field": "item_url_field",
+                  "reverse": false,
+                  "transformation_method_for_set": {
                     "transformation_method": "use_directly"
                   }
                 },
@@ -78,14 +97,14 @@
                   "forward": true,
                   "primary_external_field": "owner",
                   "reverse": true,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
                     "transformation_method": "use_as_array_value"
                   }
                 },
                 "priority": {
                   "forward": true,
                   "reverse": false,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
                     "enum": "P1",
                     "transformation_method": "use_fixed_value",
                     "value": "enum_value"
@@ -94,25 +113,21 @@
                 "stage": {
                   "forward": true,
                   "reverse": false,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
                     "enum": "in_development",
                     "transformation_method": "use_fixed_value",
                     "value": "enum_value"
                   }
                 },
                 "title": {
+                  "fallback": {
+                    "type": "text",
+                    "value": "Fallback title"
+                  },
                   "forward": true,
                   "primary_external_field": "title",
                   "reverse": true,
-                  "transformation_method": {
-                    "transformation_method": "use_directly"
-                  }
-                },
-                "item_url_field": {
-                  "forward": true,
-                  "primary_external_field": "item_url_field",
-                  "reverse": false,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
                     "transformation_method": "use_directly"
                   }
                 }
@@ -123,6 +138,7 @@
       },
       "users": {
         "default_mapping": {
+          "object_category": "stock",
           "object_type": "devu"
         },
         "possible_record_type_mappings": [
@@ -133,15 +149,20 @@
             "shard": {
               "constructed_custom_fields": {},
               "devrev_leaf_type": {
+                "object_category": "stock",
                 "object_type": "devu"
               },
               "mode": "create_shard",
               "stock_field_mappings": {
                 "display_name": {
+                  "fallback": {
+                    "type": "text",
+                    "value": "Fallback name"
+                  },
                   "forward": true,
                   "primary_external_field": "name",
                   "reverse": false,
-                  "transformation_method": {
+                  "transformation_method_for_set": {
                     "transformation_method": "use_directly"
                   }
                 }
@@ -151,6 +172,7 @@
         ]
       }
     },
-    "format_version": "v0.2.0"
+    "format_version": "v0.2.0",
+    "devrev_metadata_version": 13
   }
 }

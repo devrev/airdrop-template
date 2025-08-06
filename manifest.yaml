@@ -80,3 +80,8 @@ imports:
     # Make sure these are in sync with the keyring types in the 'keyring_types' section above.
     allowed_connection_types:
       - example-pat-connection
+
+    # The list of capabilities that the snap-in supports.
+    # capabilities:
+    # TODO: Uncomment if your snap-in supports time-scoped syncs.
+    # - TIME_SCOPED_SYNCS
