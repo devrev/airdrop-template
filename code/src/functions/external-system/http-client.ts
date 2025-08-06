@@ -1,4 +1,5 @@
 import { AirdropEvent } from '@devrev/ts-adaas';
+import { CustomTodoList, CustomTodo, CustomUser, CustomAttachment } from './types';
 
 export class HttpClient {
   private apiEndpoint: string;
@@ -16,8 +17,8 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch external sync units from
   // the external system.
-  async getTodoLists(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
+  async getTodoLists(): Promise<CustomTodoList[]> {
+    return new Promise((resolve) => {
       resolve([
         {
           id: '1',
@@ -32,8 +33,8 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch list of items from the
   // external system.
-  async getTodos(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
+  async getTodos(): Promise<CustomTodo[]> {
+    return new Promise((resolve) => {
       resolve([
         {
           id: 'todo-1',
@@ -59,8 +60,8 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch list of users from the
   // external system.
-  async getUsers(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
+  async getUsers(): Promise<CustomUser[]> {
+    return new Promise((resolve) => {
       resolve([
         {
           id: 'user-1',
@@ -82,8 +83,8 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch list of attachments from
   // the external system.
-  async getAttachments(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
+  async getAttachments(): Promise<CustomAttachment[]> {
+    return new Promise((resolve) => {
       resolve([
         {
           url: 'https://app.devrev.ai/favicon.ico',
@@ -104,17 +105,20 @@ export class HttpClient {
   }
 
   // TODO: Replace with the actual function to create an item in the external system.
-  async createTodo(todo: any): Promise<any> {
+  async createTodo(todo: CustomTodo): Promise<Record<string, unknown>> {
+    console.log('Creating todo:', todo);
     return { error: 'Could not create todo in external system.' };
   }
 
   // TODO: Replace with the actual function to update an item in the external system.
-  async updateTodo(todo: any): Promise<any> {
+  async updateTodo(todo: CustomTodo): Promise<Record<string, unknown>> {
+    console.log('Updating todo:', todo);
     return { error: 'Could not update todo in external system.' };
   }
 
   // TODO: Replace with the actual function to create an attachment in the external system.
-  async createAttachment(attachment: any): Promise<any> {
+  async createAttachment(attachment: CustomAttachment): Promise<Record<string, unknown>> {
+    console.log('Creating attachment:', attachment);
     return { error: 'Could not create attachment in external system.' };
   }
 }

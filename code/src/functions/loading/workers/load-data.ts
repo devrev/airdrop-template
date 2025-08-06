@@ -15,7 +15,6 @@ import { LoaderState } from '../index';
 // id, error or delay depending on the response from the external system.
 async function createTodo({
   item,
-  mappers,
   event,
 }: ExternalSystemItemLoadingParams<ExternalSystemItem>): Promise<ExternalSystemItemLoadingResponse> {
   // TODO: Replace with your HTTP client that will be used to make API calls
@@ -33,7 +32,6 @@ async function createTodo({
 // system.
 async function updateTodo({
   item,
-  mappers,
   event,
 }: ExternalSystemItemLoadingParams<ExternalSystemItem>): Promise<ExternalSystemItemLoadingResponse> {
   // TODO: Replace with your HTTP client that will be used to make API calls
