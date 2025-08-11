@@ -30,13 +30,13 @@ import {
   SnapInsSystemUpdateResponse,
 } from './types';
 
-
 import {
   ExecuteOperationResult,
   ExecuteOperationResult_SerializationFormat,
   FunctionExecutionError,
   OperationOutput,
 } from '@devrev/typescript-sdk/dist/snap-ins';
+import { AirdropEvent, EventType } from '@devrev/ts-adaas';
 
 const app: Express = express();
 app.use(bodyParser.json(), bodyParser.urlencoded({ extended: false }));
@@ -64,17 +64,28 @@ app.post('/handle/sync', async (req: Request, resp: Response) => {
     return;
   }
   // for sync invokation, wrap in an array
-  const events: unknown[] = [req.body];
+  const events: AirdropEvent[] = [req.body];
   await handleEvent(events, false /* isAsync */, resp);
 });
 
-async function run(f: (event: unknown[]) => Promise<unknown>, event: unknown[]): Promise<unknown> {
+async function run(f: (event: AirdropEvent[]) => Promise<void>, event: AirdropEvent[]): Promise<void> {
   const result = await f(event);
   return result;
 }
 
-async function handleEvent(events: unknown[], isAsync: boolean, resp: Response) {
-  let error;
+function functionFactoryTypeFromAirdropEvent(event: AirdropEvent): FunctionFactoryType | undefined {
+  const name = event.payload.event_type;
+  if(name.startsWith("EXTRACTION_")){
+    return "extraction"; 
+  }
+  if(name.includes("_LOADING_")) {
+    return "loading"; 
+  }
+  return undefined;
+} 
+
+async function handleEvent(events: AirdropEvent[], isAsync: boolean, resp: Response) {
+  let error: {err_type:RuntimeErrorType, err_msg: string} | FunctionError | undefined = undefined;
   const results: ExecutionResult[] = [];
 
   if (!Array.isArray(events)) {
@@ -105,49 +116,55 @@ async function handleEvent(events: unknown[], isAsync: boolean, resp: Response) 
   }
 
   for (const event of events) {
-    let result;
-    const functionName: FunctionFactoryType = (event as Record<string, unknown>).execution_metadata?.function_name as FunctionFactoryType;
+    // let result: OperationOutput;
+    const functionName: FunctionFactoryType | undefined = functionFactoryTypeFromAirdropEvent(event);
+    console.log("function name:", functionName);
     if (functionName === undefined) {
       error = {
         err_type: RuntimeErrorType.FunctionNameNotProvided,
         err_msg: 'Function name not provided in event',
       } as RuntimeError;
       console.error(error.err_msg);
-    } else {
+      continue;
+    }else {
       const f = functionFactory[functionName];
       try {
         if (f == undefined) {
           error = {
             err_type: RuntimeErrorType.FunctionNotFound,
-            err_msg: `Function ${(event as Record<string, unknown>).execution_metadata?.function_name} not found in factory`,
+            err_msg: `Function ${functionName} not found in factory`,
           } as RuntimeError;
           console.error(error.err_msg);
+          continue;
         } else {
-          result = await run(f, [event]);
+          // result = await run(f, [event]);
+          console.log("Running function:", f);
+          await run (f, [event]);
         }
       } catch (e) {
         error = { error: e } as FunctionError;
         console.error(e);
+        continue;
       }
-
-      // Any common post processing goes here. The function returns
-      // only if the function execution was by an operation
-    }
-    const opResult = await postRun(event as Record<string, unknown>, error, result);
-
-    // Return result.
-    const res: ExecutionResult = {};
-
-    if (opResult !== undefined) {
-      res.function_result = opResult;
-    } else if (result !== undefined) {
-      res.function_result = result;
     }
 
-    if (error !== undefined) {
-      res.error = error;
-    }
-    results.push(res);
+    // // Any common post processing goes here. The function returns
+    // // only if the function execution was by an operation
+    // const opResult = await postRun(event, error, result);
+
+    // // Return result.
+    // const res: ExecutionResult = {};
+
+    // if (opResult !== undefined) {
+    //   res.function_result = opResult;
+    // } else if (result !== undefined) {
+    //   res.function_result = result;
+    // }
+
+    // if (error !== undefined) {
+    //   res.error = error;
+    // }
+    // results.push(res);
   }
 
   if (!isAsync) {
@@ -155,157 +172,163 @@ async function handleEvent(events: unknown[], isAsync: boolean, resp: Response) 
   }
 }
 
-// post processing
-async function postRun(event: Record<string, unknown>, handlerError: HandlerError, result: unknown) {
-  console.debug('Function execution complete');
-  // Check if the function was invoked by an operation.
-  if (isInvokedFromOperation(event)) {
-    return handleOperationInvocationResult(event, handlerError, result);
-  }
-  if (isActivateHook(event)) {
-    handleActivateHookResult(event, handlerError, result);
-  } else if (isDeactivateHook(event)) {
-    handleDeactivateHookResult(event, handlerError, result);
-  }
-  return undefined
-}
+// // post processing
+// async function postRun(event: AirdropEvent, handlerError: HandlerError, result: OperationOutput) {
+//   console.debug('Function execution complete');
+//   console.log("Event:", event);
+//   console.log("Result:", result);
+//   // Check if the function was invoked by an operation.
+//   console.log("Invoked from operation:", event.payload.operation_slug);
+//   if (isInvokedFromOperation(event)) {
+//     return handleOperationInvocationResult(event, handlerError, result);
+//   }
+//   console.log("Hook:", event.payload?.event_type);
+//   if (isActivateHook(event)) {
+//     handleActivateHookResult(event, handlerError, result);
+//   } else if (isDeactivateHook(event)) {
+//     handleDeactivateHookResult(event, handlerError, result);
+//   }
+//   return undefined
+// }
 
-function isActivateHook(event: Record<string, unknown>): boolean {
-  return event.execution_metadata.event_type === 'hook:snap_in_activate';
-}
+// function isActivateHook(event: AirdropEvent): boolean {
+//   return event.payload.event_type as string == 'hook:snap_in_activate';
+// }
 
-function isDeactivateHook(event: Record<string, unknown>): boolean {
-  return event.execution_metadata.event_type === 'hook:snap_in_deactivate';
-}
+// function isDeactivateHook(event: AirdropEvent): boolean {
+//   return event.payload.event_type as string == 'hook:snap_in_deactivate';
+// }
 
-function isInvokedFromOperation(event: Record<string, unknown>): boolean {
-  return event.execution_metadata.operation_slug !== undefined;
-}
+// function isInvokedFromOperation(event: AirdropEvent): boolean {
+//   return event.payload.operation_slug !== undefined;
+// }
 
-function handleActivateHookResult(event: Record<string, unknown>, handlerError: HandlerError, result: unknown) {
-  const update_req: SnapInsSystemUpdateRequest = {
-    id: event.context.snap_in_id,
-    status: SnapInsSystemUpdateRequestStatus.Active,
-  };
-  const res = getActivateHookResult(result);
-  update_req.inputs_values = res.inputs_values;
+// function handleActivateHookResult(event: AirdropEvent, handlerError: HandlerError, result: OperationOutput) {
+//   const update_req: SnapInsSystemUpdateRequest = {
+//     id: event.context.snap_in_id,
+//     status: SnapInsSystemUpdateRequestStatus.Active,
+//   };
+//   const res = getActivateHookResult(result);
+//   update_req.inputs_values = res.inputs_values;
 
-  if (handlerError !== undefined || res?.status === 'error') {
-    console.debug('Setting snap-in status to error');
-    update_req.status = SnapInsSystemUpdateRequestStatus.Error;
-  }
+//   if (handlerError !== undefined || res?.status === 'error') {
+//     console.debug('Setting snap-in status to error');
+//     update_req.status = SnapInsSystemUpdateRequestStatus.Error;
+//   }
 
-  return updateSnapInState(event, update_req);
-}
+//   return updateSnapInState(event, update_req);
+// }
 
-function handleDeactivateHookResult(event: Record<string, unknown>, handlerError: HandlerError, result: unknown) {
-  const update_req: SnapInsSystemUpdateRequest = {
-    id: event.context.snap_in_id,
-    status: SnapInsSystemUpdateRequestStatus.Inactive,
-  };
-  const res = getDeactivateHookResult(result);
-  update_req.inputs_values = res.inputs_values;
-  if (event.payload.force_deactivate) {
-    console.debug('Snap-in is being force deactivated, errors ignored');
-  }
-  if ((handlerError !== undefined || res?.status === 'error') && !event.payload.force_deactivate) {
-    console.debug('Setting snap-in status to error');
-    update_req.status = SnapInsSystemUpdateRequestStatus.Error;
-  } else {
-    if (event.payload.is_deletion) {
-      console.debug('Marking snap-in to be deleted');
-      (update_req as SnapInsSystemUpdateRequestInactive).is_deletion = true;
-    } else {
-      console.debug('Setting snap-in status to inactive');
-    }
-  }
+// function handleDeactivateHookResult(event: AirdropEvent, handlerError: HandlerError, result: OperationOutput) {
+//   const update_req: SnapInsSystemUpdateRequest = {
+//     id: event.context.snap_in_id,
+//     status: SnapInsSystemUpdateRequestStatus.Inactive,
+//   };
+//   const res = getDeactivateHookResult(result);
+//   update_req.inputs_values = res.inputs_values;
+//   if (event.payload.force_deactivate) {
+//     console.debug('Snap-in is being force deactivated, errors ignored');
+//   }
+//   if ((handlerError !== undefined || res?.status === 'error') && !event.payload.force_deactivate) {
+//     console.debug('Setting snap-in status to error');
+//     update_req.status = SnapInsSystemUpdateRequestStatus.Error;
+//   } else {
+//     if (event.payload.is_deletion) {
+//       console.debug('Marking snap-in to be deleted');
+//       (update_req as SnapInsSystemUpdateRequestInactive).is_deletion = true;
+//     } else {
+//       console.debug('Setting snap-in status to inactive');
+//     }
+//   }
 
-  return updateSnapInState(event, update_req);
-}
+//   return updateSnapInState(event, update_req);
+// }
 
-// Update the snap-in status based on hook result.
-async function updateSnapInState(event: Record<string, unknown>, update_req: SnapInsSystemUpdateRequest) {
-  console.debug('Updating snap-in state after running async hook');
-  const { secrets } = event.context;
-  const client = new HTTPClient({
-    endpoint: event.execution_metadata.devrev_endpoint,
-    token: secrets?.service_account_token,
-  });
+// // Update the snap-in status based on hook result.
+// async function updateSnapInState(event: AirdropEvent, update_req: SnapInsSystemUpdateRequest) {
+//   console.debug('Updating snap-in state after running async hook');
+//   const { secrets } = event.context;
+//   const client = new HTTPClient({
+//     endpoint: event.execution_metadata.devrev_endpoint,
+//     token: secrets?.service_account_token,
+//   });
 
-  const request: HttpRequest = {
-    path: '/internal/snap-ins.system-update',
-    body: update_req,
-  };
+//   const request: HttpRequest = {
+//     path: '/internal/snap-ins.system-update',
+//     body: update_req,
+//   };
 
-  try {
-    await client.post<SnapInsSystemUpdateResponse>(request);
-  } catch (e) {
-    console.error(e);
-  }
-}
+//   try {
+//     await client.post<SnapInsSystemUpdateResponse>(request);
+//   } catch (e) {
+//     console.error(e);
+//   }
+// }
 
-function getActivateHookResult(input: unknown): ActivateHookResult {
-  const res = {} as ActivateHookResult;
-  if (input instanceof Object) {
-    if (input.status === 'active' || input.status === 'error') {
-      res.status = input.status;
-    } else if (input.status !== undefined) {
-      console.error(`Invalid status field ${input.status}: status must be active or error`);
-    }
-    if (input.inputs_values instanceof Object) {
-      res.inputs_values = input.inputs_values;
-    } else if (input.inputs_values !== undefined) {
-      console.error(`Invalid inputs_values field ${input.inputs_values}: inputs_values is not an object`);
-    }
-  }
-  return res;
-}
+// function getActivateHookResult(input: OperationOutput): ActivateHookResult {
+//   console.log("Activate hook event Input:", input);
+//   const res = {} as ActivateHookResult;
+//   // if (input instanceof Object) {
+//   //   if (input.status === 'active' || input.status === 'error') {
+//   //     res.status = input.status;
+//   //   } else if (input.status !== undefined) {
+//   //     console.error(`Invalid status field ${input.status}: status must be active or error`);
+//   //   }
+//   //   if (input.inputs_values instanceof Object) {
+//   //     res.inputs_values = input.inputs_values;
+//   //   } else if (input.inputs_values !== undefined) {
+//   //     console.error(`Invalid inputs_values field ${input.inputs_values}: inputs_values is not an object`);
+//   //   }
+//   // }
+//   return res;
+// }
 
-function getDeactivateHookResult(input: unknown): DeactivateHookResult {
-  const res = {} as DeactivateHookResult;
-  if (input instanceof Object) {
-    if (input.status === 'inactive' || input.status === 'error') {
-      res.status = input.status;
-    } else if (input.status !== undefined) {
-      console.error(`Invalid status field ${input.status}: status must be inactive or error`);
-    }
-    if (input.inputs_values instanceof Object) {
-      res.inputs_values = input.inputs_values;
-    } else if (input.inputs_values !== undefined) {
-      console.error(`Invalid inputs_values field ${input.inputs_values}: inputs_values is not an object`);
-    }
-  }
-  return res;
-}
+// function getDeactivateHookResult(input: OperationOutput): DeactivateHookResult {
+//   console.log("Deactivate hook event Input:", input);
+//   const res = {} as DeactivateHookResult;
+//   // if (input instanceof Object) {
+//   //   if (input.status === 'inactive' || input.status === 'error') {
+//   //     res.status = input.status;
+//   //   } else if (input.status !== undefined) {
+//   //     console.error(`Invalid status field ${input.status}: status must be inactive or error`);
+//   //   }
+//   //   if (input.inputs_values instanceof Object) {
+//   //     res.inputs_values = input.inputs_values;
+//   //   } else if (input.inputs_values !== undefined) {
+//   //     console.error(`Invalid inputs_values field ${input.inputs_values}: inputs_values is not an object`);
+//   //   }
+//   // }
+//   return res;
+// }
 
-async function handleOperationInvocationResult(
-  event: Record<string, unknown>,
-  handlerError: HandlerError,
-  result: unknown,
-): Promise<ExecuteOperationResult> {
-  if (result === undefined) {
-    result = generateOperationOutputFromError(handlerError);
-  }
+// async function handleOperationInvocationResult(
+//   event: AirdropEvent,
+//   handlerError: HandlerError,
+//   result: OperationOutput,
+// ): Promise<ExecuteOperationResult> {
+//   if (result === undefined) {
+//     result = generateOperationOutputFromError(handlerError);
+//   }
 
-  const operationMethod = getOperationExecutionOperationMethod(event) || '';
-  if (operationMethod === 'OperationMethod_NameEnumSchemaHandler') {
-    return createExecuteOperationResult(result, ExecuteOperationResult_SerializationFormat.JSON);
-  }
+//   const operationMethod = getOperationExecutionOperationMethod(event) || '';
+//   if (operationMethod === 'OperationMethod_NameEnumSchemaHandler') {
+//     return createExecuteOperationResult(result, ExecuteOperationResult_SerializationFormat.JSON);
+//   }
 
-  return createExecuteOperationResult(result, ExecuteOperationResult_SerializationFormat.Proto);
-}
+//   return createExecuteOperationResult(result, ExecuteOperationResult_SerializationFormat.Proto);
+// }
 
-function generateOperationOutputFromError(handlerError: HandlerError): OperationOutput {
-  const errorDetails: FailedExecutionError = {
-    source: FailedExecutionErrorSource.DeveloperFunction,
-    error:
-      handlerError instanceof FunctionExecutionError
-        ? handlerError
-        : new FunctionExecutionError((handlerError as unknown as Error)?.message, false),
-  };
+// function generateOperationOutputFromError(handlerError: HandlerError): OperationOutput {
+//   const errorDetails: FailedExecutionError = {
+//     source: FailedExecutionErrorSource.DeveloperFunction,
+//     error:
+//       handlerError instanceof FunctionExecutionError
+//         ? handlerError
+//         : new FunctionExecutionError((handlerError as unknown as Error)?.message, false),
+//   };
 
-  return OperationOutput.fromJSON({ error: errorDetails }) as OperationOutput;
-}
+//   return OperationOutput.fromJSON({ error: errorDetails }) as OperationOutput;
+// }
 
 
 export enum FailedExecutionErrorSource {
@@ -322,36 +345,38 @@ export type FailedExecutionError = {
   error: FunctionExecutionError;
 };
 
-function createExecuteOperationResult(
-  responseData: unknown,
-  format: ExecuteOperationResult_SerializationFormat,
-): ExecuteOperationResult {
-  let data: string;
+// function createExecuteOperationResult(
+//   responseData: OperationOutput,
+//   format: ExecuteOperationResult_SerializationFormat,
+// ): ExecuteOperationResult {
+//   let data: string;
 
-  try {
-    switch (format) {
-      case ExecuteOperationResult_SerializationFormat.Proto: {
-        const uint8array: Uint8Array = OperationOutput.encode(responseData).finish();
-        data = Buffer.from(uint8array).toString('base64');
-        break;
-      }
-      case ExecuteOperationResult_SerializationFormat.JSON:
-        data = Buffer.from(JSON.stringify(responseData)).toString('base64');
-        break;
-      default:
-        throw new Error(`Unsupported serialization format: ${format}`);
-    }
-  } catch (error) {
-    console.error('Error creating operation result:', error);
-    throw new Error('Failed to create operation result');
-  }
+//   try {
+//     switch (format) {
+//       case ExecuteOperationResult_SerializationFormat.Proto: {
+//         const uint8array: Uint8Array = OperationOutput.encode(responseData).finish();
+//         data = Buffer.from(uint8array).toString('base64');
+//         break;
+//       }
+//       case ExecuteOperationResult_SerializationFormat.JSON:
+//         data = Buffer.from(JSON.stringify(responseData)).toString('base64');
+//         break;
+//       default:
+//         throw new Error(`Unsupported serialization format: ${format}`);
+//     }
+//   } catch (error) {
+//     console.error('Error creating operation result:', error);
+//     throw new Error('Failed to create operation result');
+//   }
 
-  return {
-    serialization_format: format,
-    data: data,
-  } as ExecuteOperationResult;
-}
+//   return {
+//     serialization_format: format,
+//     data: data,
+//   } as ExecuteOperationResult;
+// }
 
-function getOperationExecutionOperationMethod(event: Record<string, unknown>): string | undefined {
-  return event.execution_metadata.operation_method;
-}
+// function getOperationExecutionOperationMethod(event: AirdropEvent): string | undefined {
+//   console.log("Event:", event);
+//   // return event.execution_metadata.operation_method;
+//   return undefined;
+// }

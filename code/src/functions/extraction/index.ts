@@ -43,7 +43,7 @@ function getWorkerPerExtractionPhase(event: AirdropEvent) {
 const run = async (events: AirdropEvent[]) => {
   for (const event of events) {
     const file = getWorkerPerExtractionPhase(event);
-    await spawn<ExtractorState>({
+    return await spawn<ExtractorState>({
       event,
       initialState: initialExtractorState,
       workerPath: file,

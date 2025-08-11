@@ -1,4 +1,4 @@
-import { AirdropEvent } from '@devrev/ts-adaas';
+import { AirdropEvent, ExternalSystemItemLoadingResponse } from '@devrev/ts-adaas';
 import { CustomTodoList, CustomTodo, CustomUser, CustomAttachment } from './types';
 
 export class HttpClient {
@@ -105,19 +105,19 @@ export class HttpClient {
   }
 
   // TODO: Replace with the actual function to create an item in the external system.
-  async createTodo(todo: CustomTodo): Promise<Record<string, unknown>> {
+  async createTodo(todo: CustomTodo): Promise<ExternalSystemItemLoadingResponse> {
     console.log('Creating todo:', todo);
     return { error: 'Could not create todo in external system.' };
   }
 
   // TODO: Replace with the actual function to update an item in the external system.
-  async updateTodo(todo: CustomTodo): Promise<Record<string, unknown>> {
+  async updateTodo(todo: CustomTodo): Promise<ExternalSystemItemLoadingResponse> {
     console.log('Updating todo:', todo);
     return { error: 'Could not update todo in external system.' };
   }
 
   // TODO: Replace with the actual function to create an attachment in the external system.
-  async createAttachment(attachment: CustomAttachment): Promise<Record<string, unknown>> {
+  async createAttachment(attachment: CustomAttachment): Promise<ExternalSystemItemLoadingResponse> {
     console.log('Creating attachment:', attachment);
     return { error: 'Could not create attachment in external system.' };
   }

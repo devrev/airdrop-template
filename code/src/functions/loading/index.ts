@@ -29,7 +29,7 @@ function getWorkerPerLoadingPhase(event: AirdropEvent) {
 const run = async (events: AirdropEvent[]) => {
   for (const event of events) {
     const file = getWorkerPerLoadingPhase(event);
-    await spawn<LoaderState>({
+    return await spawn<LoaderState>({
       event,
       initialState: initialLoaderState,
       workerPath: file,
