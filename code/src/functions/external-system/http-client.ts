@@ -105,20 +105,20 @@ export class HttpClient {
   }
 
   // TODO: Replace with the actual function to create an item in the external system.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createTodo(todo: CustomTodo): Promise<ExternalSystemItemLoadingResponse> {
-    console.log('Creating todo:', todo);
     return { error: 'Could not create todo in external system.' };
   }
 
   // TODO: Replace with the actual function to update an item in the external system.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateTodo(todo: CustomTodo): Promise<ExternalSystemItemLoadingResponse> {
-    console.log('Updating todo:', todo);
     return { error: 'Could not update todo in external system.' };
   }
 
   // TODO: Replace with the actual function to create an attachment in the external system.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createAttachment(attachment: CustomAttachment): Promise<ExternalSystemItemLoadingResponse> {
-    console.log('Creating attachment:', attachment);
     return { error: 'Could not create attachment in external system.' };
   }
 }

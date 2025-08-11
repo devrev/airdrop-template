@@ -15,28 +15,17 @@ deploying any code into production environments.
 import bodyParser from 'body-parser';
 import express, { Express, Request, Response } from 'express';
 import { functionFactory, FunctionFactoryType } from '../src/function-factory';
-import { HTTPClient, HttpRequest } from './http_client';
 import {
-  ActivateHookResult,
-  DeactivateHookResult,
   ExecutionResult,
   FunctionError,
-  HandlerError,
   RuntimeError,
   RuntimeErrorType,
-  SnapInsSystemUpdateRequest,
-  SnapInsSystemUpdateRequestInactive,
-  SnapInsSystemUpdateRequestStatus,
-  SnapInsSystemUpdateResponse,
 } from './types';
 
 import {
-  ExecuteOperationResult,
-  ExecuteOperationResult_SerializationFormat,
   FunctionExecutionError,
-  OperationOutput,
 } from '@devrev/typescript-sdk/dist/snap-ins';
-import { AirdropEvent, EventType } from '@devrev/ts-adaas';
+import { AirdropEvent } from '@devrev/ts-adaas';
 
 const app: Express = express();
 app.use(bodyParser.json(), bodyParser.urlencoded({ extended: false }));
