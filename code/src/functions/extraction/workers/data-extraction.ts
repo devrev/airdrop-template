@@ -51,6 +51,8 @@ processTask<ExtractorState>({
   task: async ({ adapter }) => {
     adapter.initializeRepos(repos);
 
+    // TODO: Replace with HTTP client that will be used to make API calls
+    // to the external system.
     const httpClient = new HttpClient(adapter.event);
 
     // TODO: Replace with your implementation to extract data from the external
