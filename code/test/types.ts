@@ -72,16 +72,16 @@ export type SnapInsSystemUpdateResponse = object;
 export type HandlerError = FunctionError | RuntimeError | undefined;
 
 export type ExecutionResult = {
-  function_result?: unknown;
+  function_result?: any;
   error?: HandlerError;
 };
 
 export type ActivateHookResult = {
   status: 'active' | 'error';
-  inputs_values?: Record<string, unknown>;
+  inputs_values?: Record<string, any>;
 };
 
 export type DeactivateHookResult = {
   status: 'inactive' | 'error';
-  inputs_values?: Record<string, unknown>;
+  inputs_values?: Record<string, any>;
 };
