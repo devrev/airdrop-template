@@ -5,7 +5,7 @@ import { defineConfig } from "eslint/config";
 import prettierConfig from "eslint-config-prettier";
 
 export default defineConfig([
-  { ignores: ["dist/**"] },
+  { ignores: ["dist/**", "test/**"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: globals.browser } },
   ...tseslint.configs.recommended,
   prettierConfig,
