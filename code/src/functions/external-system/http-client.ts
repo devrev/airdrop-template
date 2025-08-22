@@ -1,5 +1,5 @@
 import { AirdropEvent, ExternalSystemItemLoadingResponse } from '@devrev/ts-adaas';
-import { CustomTodoList, CustomTodo, CustomUser, CustomAttachment } from './types';
+import { ExternalTodoList, ExternalTodo, ExternalUser, ExternalAttachment } from './types';
 
 export class HttpClient {
   private apiEndpoint: string;
@@ -17,7 +17,7 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch external sync units from
   // the external system.
-  async getTodoLists(): Promise<CustomTodoList[]> {
+  async getTodoLists(): Promise<ExternalTodoList[]> {
     return new Promise((resolve) => {
       resolve([
         {
@@ -33,7 +33,7 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch list of items from the
   // external system.
-  async getTodos(): Promise<CustomTodo[]> {
+  async getTodos(): Promise<ExternalTodo[]> {
     return new Promise((resolve) => {
       resolve([
         {
@@ -60,7 +60,7 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch list of users from the
   // external system.
-  async getUsers(): Promise<CustomUser[]> {
+  async getUsers(): Promise<ExternalUser[]> {
     return new Promise((resolve) => {
       resolve([
         {
@@ -83,7 +83,7 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to fetch list of attachments from
   // the external system.
-  async getAttachments(): Promise<CustomAttachment[]> {
+  async getAttachments(): Promise<ExternalAttachment[]> {
     return new Promise((resolve) => {
       resolve([
         {
@@ -106,19 +106,19 @@ export class HttpClient {
 
   // TODO: Replace with the actual function to create an item in the external system.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createTodo(todo: CustomTodo): Promise<ExternalSystemItemLoadingResponse> {
+  async createTodo(todo: ExternalTodo): Promise<ExternalSystemItemLoadingResponse> {
     return { error: 'Could not create todo in external system.' };
   }
 
   // TODO: Replace with the actual function to update an item in the external system.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async updateTodo(todo: CustomTodo): Promise<ExternalSystemItemLoadingResponse> {
+  async updateTodo(todo: ExternalTodo): Promise<ExternalSystemItemLoadingResponse> {
     return { error: 'Could not update todo in external system.' };
   }
 
   // TODO: Replace with the actual function to create an attachment in the external system.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createAttachment(attachment: CustomAttachment): Promise<ExternalSystemItemLoadingResponse> {
+  async createAttachment(attachment: ExternalAttachment): Promise<ExternalSystemItemLoadingResponse> {
     return { error: 'Could not create attachment in external system.' };
   }
 }

@@ -3,7 +3,7 @@ import { ExtractorEventType, processTask } from '@devrev/ts-adaas';
 import { normalizeAttachment, normalizeTodo, normalizeUser } from '../../external-system/data-normalization';
 import { HttpClient } from '../../external-system/http-client';
 import { ExtractorState } from '../index';
-import { CustomTodo, CustomUser, CustomAttachment } from '../../external-system/types';
+import { ExternalTodo, ExternalUser, ExternalAttachment } from '../../external-system/types';
 
 // TODO: Replace with actual repos that will be used to store the
 // data extracted from the external system. For example, you might want to
@@ -12,15 +12,15 @@ import { CustomTodo, CustomUser, CustomAttachment } from '../../external-system/
 const repos = [
   {
     itemType: 'todos',
-    normalize: (item: object) => normalizeTodo(item as CustomTodo),
+    normalize: (item: object) => normalizeTodo(item as ExternalTodo),
   },
   {
     itemType: 'users',
-    normalize: (item: object) => normalizeUser(item as CustomUser),
+    normalize: (item: object) => normalizeUser(item as ExternalUser),
   },
   {
     itemType: 'attachments',
-    normalize: (item: object) => normalizeAttachment(item as CustomAttachment),
+    normalize: (item: object) => normalizeAttachment(item as ExternalAttachment),
   },
 ];
 

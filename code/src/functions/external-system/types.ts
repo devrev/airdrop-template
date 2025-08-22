@@ -1,6 +1,6 @@
 // Custom system data types based on the structures returned by HttpClient
 
-export interface CustomTodoList {
+export interface ExternalTodoList {
   id: string;
   name: string;
   description: string;
@@ -8,7 +8,7 @@ export interface CustomTodoList {
   item_type: string;
 }
 
-export interface CustomTodo {
+export interface ExternalTodo {
   id: string;
   created_date: string;
   modified_date: string;
@@ -18,7 +18,7 @@ export interface CustomTodo {
   title: string;
 }
 
-export interface CustomUser {
+export interface ExternalUser {
   id: string;
   created_date: string;
   modified_date: string;
@@ -26,7 +26,7 @@ export interface CustomUser {
   name: string;
 }
 
-export interface CustomAttachment {
+export interface ExternalAttachment {
   url: string;
   id: string;
   file_name: string;

@@ -7,7 +7,7 @@ import {
 
 import { HttpClient } from '../../external-system/http-client';
 import { LoaderState } from '../index';
-import { CustomAttachment } from 'functions/external-system/types';
+import { ExternalAttachment } from 'functions/external-system/types';
 
 // TODO: Replace with your create function that will be used to make API calls
 // to the external system to create a new attachment. Function must return
@@ -41,7 +41,7 @@ processTask<LoaderState>({
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function denormalizeAttachment(item: ExternalSystemAttachment): CustomAttachment {
+function denormalizeAttachment(item: ExternalSystemAttachment): ExternalAttachment {
   throw new Error('Function not implemented.');
 }
 
