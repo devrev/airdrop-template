@@ -10,11 +10,14 @@ import { denormalizeTodo } from '../../external-system/data-denormalization';
 import { HttpClient } from '../../external-system/http-client';
 import { LoaderState } from '../index';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // TODO: Replace with your create function that will be used to make API calls
 // to the external system to create a new item. Function must return object with
 // id, error or delay depending on the response from the external system.
 async function createTodo({
   item,
+  mappers,
   event,
 }: ExternalSystemItemLoadingParams<ExternalSystemItem>): Promise<ExternalSystemItemLoadingResponse> {
   // TODO: Replace with your HTTP client that will be used to make API calls
@@ -32,6 +35,7 @@ async function createTodo({
 // system.
 async function updateTodo({
   item,
+  mappers,
   event,
 }: ExternalSystemItemLoadingParams<ExternalSystemItem>): Promise<ExternalSystemItemLoadingResponse> {
   // TODO: Replace with your HTTP client that will be used to make API calls
