@@ -7,6 +7,9 @@ import {
 
 import { HttpClient } from '../../external-system/http-client';
 import { LoaderState } from '../index';
+import { ExternalAttachment } from 'functions/external-system/types';
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 // TODO: Replace with your create function that will be used to make API calls
 // to the external system to create a new attachment. Function must return
@@ -15,7 +18,8 @@ async function createAttachment({ item, mappers, event }: ExternalSystemItemLoad
   // TODO: Replace with your HTTP client that will be used to make API calls
   // to the external system.
   const httpClient = new HttpClient(event);
-  const createAttachmentResponse = await httpClient.createAttachment(item);
+  const attachment = denormalizeAttachment(item);
+  const createAttachmentResponse = await httpClient.createAttachment(attachment);
   return createAttachmentResponse;
 }
 
@@ -37,3 +41,8 @@ processTask<LoaderState>({
     });
   },
 });
+
+function denormalizeAttachment(item: ExternalSystemAttachment): ExternalAttachment {
+  throw new Error('Function not implemented.');
+}
+

@@ -10,6 +10,8 @@ import { denormalizeTodo } from '../../external-system/data-denormalization';
 import { HttpClient } from '../../external-system/http-client';
 import { LoaderState } from '../index';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // TODO: Replace with your create function that will be used to make API calls
 // to the external system to create a new item. Function must return object with
 // id, error or delay depending on the response from the external system.
