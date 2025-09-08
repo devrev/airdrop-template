@@ -42,7 +42,6 @@ processTask<LoaderState>({
   },
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function denormalizeAttachment(item: ExternalSystemAttachment): ExternalAttachment {
   throw new Error('Function not implemented.');
 }
