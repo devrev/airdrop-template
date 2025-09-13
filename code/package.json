@@ -58,7 +58,7 @@
   "dependencies": {
     "@devrev/ts-adaas": "1.8.1",
     "@devrev/typescript-sdk": "1.1.63",
-    "axios": "^1.9.0",
+    "axios": "^1.12.1",
     "dotenv": "^16.0.3",
     "jiti": "2.5.1",
     "js-jsonl": "^1.1.1",
