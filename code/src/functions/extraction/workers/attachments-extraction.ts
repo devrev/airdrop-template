@@ -5,11 +5,11 @@ import {
   ExternalSystemAttachmentStreamingResponse,
   ExtractorEventType,
   processTask,
-  serializeAxiosError,
 } from '@devrev/ts-adaas';
 
 // TODO: Replace with function for fetching attachment streams from the
-// external system. This function should return a stream of the attachment data.
+// external system. This function should return either a stream of the
+// attachment data or a delay or an error.
 async function getFileStream({
   item,
 }: ExternalSystemAttachmentStreamingParams): Promise<ExternalSystemAttachmentStreamingResponse> {
@@ -20,22 +20,28 @@ async function getFileStream({
       responseType: 'stream',
       headers: {
         'Accept-Encoding': 'identity',
+        timeout: 30000,
       },
     });
 
     return { httpStream: fileStreamResponse };
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.warn(`Error while fetching attachment ${id} from URL.`, serializeAxiosError(error));
-      console.warn('Failed attachment metadata', item);
-    } else {
-      console.warn(`Error while fetching attachment ${id} from URL.`, error);
-      console.warn('Failed attachment metadata', item);
+      if (error?.response?.status === 429) {
+        const retryAfter = error.response?.headers['retry-after'];
+        return { delay: retryAfter };
+      } else {
+        return {
+          error: {
+            message: `Error while fetching attachment ${id} from URL. Error code: ${error.response?.status}. Error message: ${error.response?.data.message}.`,
+          },
+        };
+      }
     }
 
     return {
       error: {
-        message: `Failed to fetch attachment ${id} from URL.`,
+        message: `Unknown error while fetching attachment ${id} from URL. Error: ${error}.`,
       },
     };
   }
@@ -46,6 +52,10 @@ processTask({
     try {
       const response = await adapter.streamAttachments({
         stream: getFileStream,
+
+        // TODO: If needed you can specify how many attachments to stream at
+        // once. Minimum is 1 and maximum is 50.
+        // batchSize: 10,
       });
 
       if (response?.delay) {
