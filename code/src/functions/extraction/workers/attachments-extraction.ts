@@ -9,7 +9,7 @@ import {
 
 // TODO: Replace with function for fetching attachment streams from the
 // external system. This function should return either a stream of the
-// attachment data or a delay or an error.
+// attachment data, a delay or an error.
 async function getFileStream({
   item,
 }: ExternalSystemAttachmentStreamingParams): Promise<ExternalSystemAttachmentStreamingResponse> {
