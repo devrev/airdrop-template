@@ -5,6 +5,8 @@ import { HttpClient } from '../../external-system/http-client';
 
 processTask({
   task: async ({ adapter }) => {
+    console.log(`Logging event in external-sync-units-extraction worker`, adapter.event);
+
     // TODO: Replace with HTTP client that will be used to make API calls
     // to the external system.
     const httpClient = new HttpClient(adapter.event);
