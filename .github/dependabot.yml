@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/code/"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-name: "@devrev/ts-adaas"
+    labels:
+      - "dependencies"
+      - "marketplace-submission"
+    open-pull-requests-limit: 1
