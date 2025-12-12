@@ -6,14 +6,14 @@ which imports todo lists, todos and users from a fake example external system in
 ## Usage
 
 1. Press on the green "Use this template" button, then "Create a new repository"
-2. Name the repository in the form `airdrop-<external-system-name>-snap-in`, e.g
-`airdrop-github-snap-in` (otherwise you will have to edit the snap-in manifest and a few other files).
+2. Name the repository in the form `airsync-<external-system-name>-snap-in`, e.g
+`airsync-github-snap-in` (otherwise you will have to edit the snap-in manifest and a few other files).
 3. Create the repository
 
 A new repository will be created, with some data already populated by the template, assuming you set
-the name according to Step 2 above.
+the name, according to Step 2 above.
 
 ## Additional info
 
-While developing the Airdrop snap-in, make sure to refer to the
-[Airdrop snap-in documentation](https://developer.devrev.ai/public/snapin-development/adaas/).
+While developing the AirSync snap-in, make sure to refer to the
+[AirSync snap-in documentation](https://developer.devrev.ai/airsync).
