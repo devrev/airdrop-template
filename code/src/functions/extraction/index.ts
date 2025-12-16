@@ -19,35 +19,13 @@ export const initialExtractorState: ExtractorState = {
   attachments: { completed: false },
 };
 
-function getWorkerPerExtractionPhase(event: AirdropEvent) {
-  let path;
-  switch (event.payload.event_type) {
-    case EventType.ExtractionExternalSyncUnitsStart:
-      path = __dirname + '/workers/external-sync-units-extraction';
-      break;
-    case EventType.ExtractionMetadataStart:
-      path = __dirname + '/workers/metadata-extraction';
-      break;
-    case EventType.ExtractionDataStart:
-    case EventType.ExtractionDataContinue:
-      path = __dirname + '/workers/data-extraction';
-      break;
-    case EventType.ExtractionAttachmentsStart:
-    case EventType.ExtractionAttachmentsContinue:
-      path = __dirname + '/workers/attachments-extraction';
-      break;
-  }
-  return path;
-}
-
 const run = async (events: AirdropEvent[]) => {
   for (const event of events) {
-    const file = getWorkerPerExtractionPhase(event);
     await spawn<ExtractorState>({
       event,
       initialState: initialExtractorState,
-      workerPath: file,
       initialDomainMapping,
+      baseWorkerPath: __dirname,
 
       // TODO: If needed you can pass additional options to the spawn function.
       // For example timeout of the lambda, batch size, etc.
