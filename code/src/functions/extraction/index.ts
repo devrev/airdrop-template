@@ -1,4 +1,4 @@
-import { AirdropEvent, EventType, spawn } from '@devrev/ts-adaas';
+import { AirdropEvent, spawn } from '@devrev/ts-adaas';
 
 import initialDomainMapping from '../external-system/initial_domain_mapping.json';
 
