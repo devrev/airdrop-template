@@ -1,4 +1,4 @@
-import { AirdropEvent, EventType, spawn } from '@devrev/ts-adaas';
+import { AirdropEvent, spawn } from '@devrev/ts-adaas';
 
 import initialDomainMapping from '../external-system/initial_domain_mapping.json';
 
@@ -11,29 +11,13 @@ export interface LoaderState {}
 // This state will be used as a starting point for the loading process.
 export const initialLoaderState: LoaderState = {};
 
-function getWorkerPerLoadingPhase(event: AirdropEvent) {
-  let path;
-  switch (event.payload.event_type) {
-    case EventType.StartLoadingData:
-    case EventType.ContinueLoadingData:
-      path = __dirname + '/workers/load-data';
-      break;
-    case EventType.StartLoadingAttachments:
-    case EventType.ContinueLoadingAttachments:
-      path = __dirname + '/workers/load-attachments';
-      break;
-  }
-  return path;
-}
-
 const run = async (events: AirdropEvent[]) => {
   for (const event of events) {
-    const file = getWorkerPerLoadingPhase(event);
     await spawn<LoaderState>({
       event,
       initialState: initialLoaderState,
-      workerPath: file,
       initialDomainMapping,
+      baseWorkerPath: __dirname,
 
       // TODO: If needed you can pass additional options to the spawn function.
       // For example timeout of the lambda, batch size, etc.
