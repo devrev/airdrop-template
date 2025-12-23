@@ -11,9 +11,9 @@ which imports todo lists, todos and users from a fake example external system in
 3. Create the repository
 
 A new repository will be created, with some data already populated by the template, assuming you set
-the name according to Step 2 above.
+the name, according to Step 2 above.
 
 ## Additional info
 
-While developing the Airdrop snap-in, make sure to refer to the
-[Airdrop snap-in documentation](https://developer.devrev.ai/public/snapin-development/adaas/).
+While developing the AirSync snap-in, make sure to refer to the
+[AirSync snap-in documentation](https://developer.devrev.ai/airsync).
