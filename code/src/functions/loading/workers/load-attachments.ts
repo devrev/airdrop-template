@@ -29,13 +29,13 @@ processTask<LoaderState>({
       create: createAttachment,
     });
 
-    await adapter.emit(LoaderEventType.AttachmentLoadingDone, {
+    await adapter.emit(LoaderEventType.AttachmentsLoadingDone, {
       reports,
       processed_files,
     });
   },
   onTimeout: async ({ adapter }) => {
-    await adapter.emit(LoaderEventType.AttachmentLoadingProgress, {
+    await adapter.emit(LoaderEventType.AttachmentsLoadingProgress, {
       reports: adapter.reports,
       processed_files: adapter.processedFiles,
     });
