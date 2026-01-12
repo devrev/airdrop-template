@@ -1,5 +1,5 @@
 import { AirdropEvent, ExternalSystemItemLoadingResponse } from '@devrev/ts-adaas';
-import { ExternalTodoList, ExternalTodo, ExternalUser, ExternalAttachment } from './types';
+import { ExternalAttachment, ExternalTodo, ExternalTodoList, ExternalUser } from './types';
 
 export class HttpClient {
   private apiEndpoint: string;
@@ -97,6 +97,20 @@ export class HttpClient {
           url: 'https://app.devrev.ai/favicon.ico',
           id: 'attachment-2',
           file_name: 'favicon2.ico',
+          author_id: 'user-2',
+          parent_id: 'todo-2',
+        },
+        {
+          url: 'https://media.githubusercontent.com/media/radovanjorgic/rado-large/refs/heads/main/largefile_200mb.txt?token=AROSNNYWX5LVJC7YT2DZWMTJHFJM2',
+          id: 'attachment-3',
+          file_name: 'largefile_200mb.txt',
+          author_id: 'user-2',
+          parent_id: 'todo-2',
+        },
+        {
+          url: 'https://media.githubusercontent.com/media/radovanjorgic/rado-large/refs/heads/main/largefile_1gb.txt?token=AROSNN5TIS6ONPEJXLRKRRTJHFJLM',
+          id: 'attachment-4',
+          file_name: 'large-file.json',
           author_id: 'user-2',
           parent_id: 'todo-2',
         },
