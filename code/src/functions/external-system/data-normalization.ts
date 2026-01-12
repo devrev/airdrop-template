@@ -1,5 +1,5 @@
 import { ExternalSyncUnit, NormalizedAttachment, NormalizedItem } from '@devrev/ts-adaas';
-import { ExternalTodoList, ExternalTodo, ExternalUser, ExternalAttachment } from './types';
+import { ExternalAttachment, ExternalTodo, ExternalTodoList, ExternalUser } from './types';
 
 // TODO: Replace with your actual normalization functions that will be used to
 // normalize the data received from the external system. You can modify the

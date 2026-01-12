@@ -1,5 +1,5 @@
 import { AirdropEvent, ExternalSystemItemLoadingResponse } from '@devrev/ts-adaas';
-import { ExternalTodoList, ExternalTodo, ExternalUser, ExternalAttachment } from './types';
+import { ExternalAttachment, ExternalTodo, ExternalTodoList, ExternalUser } from './types';
 
 export class HttpClient {
   private apiEndpoint: string;
