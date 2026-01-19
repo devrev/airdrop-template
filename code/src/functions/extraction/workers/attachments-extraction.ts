@@ -1,6 +1,6 @@
+import axios from 'axios';
+
 import {
-  axios,
-  axiosClient,
   ExternalSystemAttachmentStreamingParams,
   ExternalSystemAttachmentStreamingResponse,
   ExtractorEventType,
@@ -16,7 +16,7 @@ async function getFileStream({
   const { id, url } = item;
 
   try {
-    const fileStreamResponse = await axiosClient.get(url, {
+    const fileStreamResponse = await axios.get(url, {
       responseType: 'stream',
       headers: {
         'Accept-Encoding': 'identity',
