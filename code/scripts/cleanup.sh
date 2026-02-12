@@ -43,7 +43,7 @@ fi
 DEVREV_ENV="${ENV:-prod}"
 
 # Authenticate
-echo "Authenticating with DevRev ($DEVREV_ENV)..."
+echo "Authenticating as $USER_EMAIL into $DEV_ORG ($DEVREV_ENV)..."
 devrev profiles authenticate --env "$DEVREV_ENV" --usr "$USER_EMAIL" --org "$DEV_ORG" --expiry 5
 
 if [ $? -ne 0 ]; then
