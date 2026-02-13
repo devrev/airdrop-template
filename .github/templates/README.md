@@ -25,18 +25,20 @@ cd code
 npm ci
 ```
 
-3. Create your `.env` file from the example:
+3. (Optional) Create a `.env` file to set default values for the prompts:
 
 ```sh
 cp .env.example .env
 ```
 
-4. Edit `.env` with your DevRev organization slug and email:
+Edit `.env` with your DevRev organization slug and email:
 
 ```ini
 DEV_ORG=my-org
 USER_EMAIL=my@email.com
 ```
+
+These values will be used as defaults when the scripts prompt you for credentials.
 
 ## Deploy
 
@@ -46,10 +48,11 @@ Run the deployment script:
 npm run deploy
 ```
 
-This will prompt you to choose:
+The script will prompt you for:
 
-- **Local** - Deploy with ngrok for development (logs visible in terminal)
-- **Lambda** - Deploy to Lambda for production testing
+1. **Deployment mode**: Local (ngrok) or Lambda
+2. **Organization**: Your DevRev org slug (defaults to `.env` value if set)
+3. **Email**: Your DevRev email (defaults to `.env` value if set)
 
 ## Cleanup
 
@@ -58,6 +61,8 @@ Remove all snap-in packages and versions from your organization:
 ```sh
 npm run cleanup
 ```
+
+The script will prompt you for organization and email credentials.
 
 ## Start an Import
 
