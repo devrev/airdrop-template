@@ -60,7 +60,8 @@ processTask<ExtractorState>({
     // system. This is just an example how you can iterate over the item types,
     // extract them, push them to the repo, and save the state.
     for (const itemTypeToExtract of itemTypesToExtract) {
-      // Check if we are running out of time, so that we know to end.
+      // We need to check to verify that the timeout is happening,
+      // so that we can stop processing and allow onTimeout to run.
       if(adapter.isTimeout) {
         return;
       }
