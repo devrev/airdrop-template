@@ -60,6 +60,10 @@ processTask<ExtractorState>({
     // system. This is just an example how you can iterate over the item types,
     // extract them, push them to the repo, and save the state.
     for (const itemTypeToExtract of itemTypesToExtract) {
+      // If the worker is about to time out, exit early so that `onTimeout` can run and emit progress.
+      if(adapter.isTimeout) {
+        return;
+      }
       const items = await itemTypeToExtract.extractFunction(httpClient);
       await adapter.getRepo(itemTypeToExtract.name)?.push(items);
       adapter.state[itemTypeToExtract.name].completed = true;
