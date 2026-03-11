@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { MockDevRevServer } from './mock-devrev-server';
+import { MockDevRevServer, SyncMapperRecord } from './mock-devrev-server';
 import { OrchestratorResult } from './orchestrator';
 
 export interface ItemTypeReport {
@@ -26,6 +26,18 @@ export interface ValidationReport {
     emptyFiles: string[];
     totalRecords: number;
     totalFiles: number;
+  };
+}
+
+export interface LoadingReport {
+  timestamp: string;
+  durationMs: number;
+  phasesCompleted: string[];
+  phasesFailed: string[];
+  syncMapperRecords: SyncMapperRecord[];
+  summary: {
+    totalMapperRecords: number;
+    byItemType: Record<string, { created: number; updated: number; failed: number }>;
   };
 }
 
@@ -164,6 +176,59 @@ export async function validateAndReport(
 
   // Print report to console
   printReport(report, outputDir);
+
+  return report;
+}
+
+/**
+ * Validates loading output and generates a loading report.
+ */
+export async function validateAndReportLoading(
+  server: MockDevRevServer,
+  orchestratorResult: OrchestratorResult
+): Promise<LoadingReport> {
+  const outputDir = server.getOutputDir();
+  const loadingDir = server.getLoadingDir();
+
+  // Ensure loading directory exists
+  if (!fs.existsSync(loadingDir)) {
+    fs.mkdirSync(loadingDir, { recursive: true });
+  }
+
+  const completedPhases = orchestratorResult.phases
+    .filter((p) => !p.error)
+    .map((p) => p.phase);
+  const failedPhases = orchestratorResult.phases
+    .filter((p) => p.error)
+    .map((p) => p.phase);
+
+  // Get sync mapper records
+  const syncMapperRecords = server.getSyncMapperRecords();
+
+  // Build summary - count records by examining external_ids patterns
+  // In our mock, each mapper record represents one create or update operation
+  const byItemType: Record<string, { created: number; updated: number; failed: number }> = {};
+  // Note: We don't have per-item-type breakdown from mapper records alone.
+  // The loading reports from callbacks give us this info. For now, report totals.
+
+  const report: LoadingReport = {
+    timestamp: new Date().toISOString(),
+    durationMs: orchestratorResult.totalDurationMs,
+    phasesCompleted: completedPhases,
+    phasesFailed: failedPhases,
+    syncMapperRecords,
+    summary: {
+      totalMapperRecords: syncMapperRecords.length,
+      byItemType,
+    },
+  };
+
+  // Write loading report
+  const reportPath = path.join(outputDir, 'loading_report.json');
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf-8');
+
+  // Print loading report to console
+  printLoadingReport(report, outputDir);
 
   return report;
 }
@@ -322,6 +387,64 @@ function printReport(report: ValidationReport, outputDir: string): void {
   console.log(`    Artifacts:      ${outputDir}/artifacts/`);
   console.log(`    Data:           ${outputDir}/data/`);
   console.log(`    Report:         ${outputDir}/report.json`);
+  console.log('');
+  console.log(divider);
+  console.log('');
+}
+
+function printLoadingReport(report: LoadingReport, outputDir: string): void {
+  const divider = '='.repeat(60);
+  const thinDivider = '-'.repeat(60);
+
+  console.log('');
+  console.log(divider);
+  console.log('  LOCAL LOADING REPORT');
+  console.log(divider);
+  console.log('');
+
+  // Status
+  const totalPhases =
+    report.phasesCompleted.length + report.phasesFailed.length;
+  const statusIcon = report.phasesFailed.length === 0 ? 'OK' : 'FAILED';
+  console.log(
+    `  Status: ${statusIcon} (${report.phasesCompleted.length}/${totalPhases} phases completed)`
+  );
+  console.log(
+    `  Duration: ${(report.durationMs / 1000).toFixed(1)}s`
+  );
+
+  if (report.phasesFailed.length > 0) {
+    console.log(`  Failed: ${report.phasesFailed.join(', ')}`);
+  }
+
+  // Sync mapper records
+  console.log('');
+  console.log(`  Sync Mapper Records: ${report.summary.totalMapperRecords}`);
+
+  if (report.syncMapperRecords.length > 0) {
+    console.log('');
+    console.log('  Sample Mapper Records:');
+    console.log(`  ${thinDivider}`);
+    const samples = report.syncMapperRecords.slice(0, 10);
+    for (const record of samples) {
+      const extIds = record.external_ids.join(', ');
+      const targets = record.targets.join(', ');
+      console.log(
+        `    ${record.id}: external=[${extIds}] -> targets=[${targets}]`
+      );
+    }
+    if (report.syncMapperRecords.length > 10) {
+      console.log(
+        `    ... and ${report.syncMapperRecords.length - 10} more (see loading/sync_mapper_records.json)`
+      );
+    }
+  }
+
+  // Output paths
+  console.log('');
+  console.log('  Output:');
+  console.log(`    Loading Report:    ${outputDir}/loading_report.json`);
+  console.log(`    Mapper Records:    ${outputDir}/loading/sync_mapper_records.json`);
   console.log('');
   console.log(divider);
   console.log('');

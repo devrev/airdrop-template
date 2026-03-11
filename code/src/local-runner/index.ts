@@ -4,9 +4,9 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { MockDevRevServer } from './mock-devrev-server';
-import { ExtractionPhase, runExtraction } from './orchestrator';
+import { ExtractionPhase, runExtraction, runLoading } from './orchestrator';
 import { LocalFixture } from './event-factory';
-import { validateAndReport } from './validator';
+import { validateAndReport, validateAndReportLoading } from './validator';
 
 const DEFAULT_PORT = 9999;
 const DEFAULT_OUTPUT_DIR = path.resolve(
@@ -33,7 +33,7 @@ async function main() {
     .option('skip-attachments', {
       type: 'boolean',
       default: false,
-      description: 'Skip the attachment extraction phase',
+      description: 'Skip the attachment extraction/loading phases',
     })
     .option('phases', {
       type: 'string',
@@ -51,6 +51,16 @@ async function main() {
       default: DEFAULT_OUTPUT_DIR,
       description: 'Output directory path',
     })
+    .option('with-loading', {
+      type: 'boolean',
+      default: false,
+      description: 'Also run loading phase after extraction',
+    })
+    .option('loading-only', {
+      type: 'boolean',
+      default: false,
+      description: 'Only run loading (assumes extraction already ran, reuses artifacts from local-output/)',
+    })
     .help()
     .alias('help', 'h')
     .example(
@@ -62,8 +72,12 @@ async function main() {
       'Clean run, skip attachments'
     )
     .example(
-      '$0 --fixture src/fixtures/local-extraction.json --phases data',
-      'Only run data extraction phase'
+      '$0 --fixture src/fixtures/local-extraction.json --with-loading',
+      'Run extraction then loading'
+    )
+    .example(
+      '$0 --fixture src/fixtures/local-extraction.json --loading-only',
+      'Run loading on previously extracted data'
     )
     .parse();
 
@@ -147,25 +161,70 @@ async function main() {
     console.log(`Output directory: ${outputDir}`);
     console.log('');
 
-    // ──────────────────────────────────────────────
-    // Run extraction
-    // ──────────────────────────────────────────────
-
-    const result = await runExtraction({
-      fixture,
-      server,
-      phases,
-      skipAttachments: argv['skip-attachments'],
-    });
+    const withLoading = argv['with-loading'] || false;
+    const loadingOnly = argv['loading-only'] || false;
 
     // ──────────────────────────────────────────────
-    // Validate and report
+    // Run extraction (unless loading-only)
     // ──────────────────────────────────────────────
 
-    await validateAndReport(server, result);
+    let extractionResult;
 
-    // Exit with appropriate code
-    process.exit(result.success ? 0 : 1);
+    if (!loadingOnly) {
+      extractionResult = await runExtraction({
+        fixture,
+        server,
+        phases,
+        skipAttachments: argv['skip-attachments'],
+      });
+
+      await validateAndReport(server, extractionResult);
+
+      if (!extractionResult.success) {
+        process.exit(1);
+      }
+    } else {
+      // In loading-only mode, reconstitute artifact metadata from disk
+      const reconstituted = server.reconstitueArtifactsFromDisk();
+      if (reconstituted === 0) {
+        console.error(
+          'No artifacts found in local-output/. Run extraction first, or use --with-loading.'
+        );
+        process.exit(1);
+      }
+      console.log(`Reconstituted ${reconstituted} artifact(s) from previous extraction run`);
+      console.log('');
+    }
+
+    // ──────────────────────────────────────────────
+    // Run loading (if requested)
+    // ──────────────────────────────────────────────
+
+    if (withLoading || loadingOnly) {
+      // Determine external sync unit ID from extraction result or fixture
+      const externalSyncUnitId =
+        (extractionResult?.externalSyncUnits?.[0]?.id) ||
+        fixture.external_sync_unit_id;
+
+      console.log('');
+      console.log('Starting loading phase...');
+      console.log('');
+
+      const loadingResult = await runLoading({
+        fixture,
+        server,
+        skipAttachments: argv['skip-attachments'],
+        externalSyncUnitId,
+      });
+
+      await validateAndReportLoading(server, loadingResult);
+
+      if (!loadingResult.success) {
+        process.exit(1);
+      }
+    }
+
+    process.exit(0);
   } catch (error) {
     console.error(
       'Fatal error:',

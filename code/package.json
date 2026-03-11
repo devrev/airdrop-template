@@ -16,7 +16,8 @@
     "test:server": "nodemon --watch src  --watch test test/main.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "extract:local": "ts-node src/local-runner/index.ts"
+    "extract:local": "ts-node src/local-runner/index.ts",
+    "load:local": "ts-node src/local-runner/index.ts --loading-only"
   },
   "keywords": [],
   "author": "",

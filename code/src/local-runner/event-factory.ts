@@ -102,6 +102,8 @@ export interface CreateEventOptions {
   runId?: string;
   /** Request ID - should stay consistent across all phases of a single run */
   requestId?: string;
+  /** Mode - 'INITIAL' for extraction, 'LOADING' for loading */
+  mode?: 'INITIAL' | 'LOADING';
 }
 
 /**
@@ -116,12 +118,14 @@ export function createLocalEvent({
   eventData,
   runId,
   requestId,
+  mode,
 }: CreateEventOptions): AirdropEvent {
   const effectiveIDM = buildEffectiveIDM(fixture);
   const versionId = deriveVersionId(effectiveIDM);
   const syncUnitId = externalSyncUnitId || fixture.external_sync_unit_id || 'local-sync-unit';
   const effectiveRunId = runId || crypto.randomUUID();
   const effectiveRequestId = requestId || crypto.randomUUID();
+  const effectiveMode = mode || 'INITIAL';
 
   return {
     context: {
@@ -150,7 +154,7 @@ export function createLocalEvent({
         external_system_name: 'Local External System',
         external_system_type: 'ADaaS',
         import_slug: 'local_import_slug',
-        mode: 'INITIAL',
+        mode: effectiveMode,
         request_id: effectiveRequestId,
         request_id_adaas: effectiveRequestId,
         run_id: effectiveRunId,
