@@ -1,0 +1,12 @@
+{
+  "connection_data": {
+    "org_id": "local-test",
+    "org_name": "Local Test Org",
+    "key": "test-api-key",
+    "key_type": "api_key"
+  },
+  "external_sync_unit_id": "",
+  "options": {
+    "external_api_base_url": "http://localhost:3001"
+  }
+}
