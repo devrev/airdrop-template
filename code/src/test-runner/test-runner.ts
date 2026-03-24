@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -37,8 +38,26 @@ export interface TestRunnerProps {
 }
 
 /**
+ * Replace all `${VAR_NAME}` placeholders in a string with values from
+ * `process.env`. Throws if a referenced variable is not set.
+ */
+function resolveEnvVariables(raw: string, filePath: string): string {
+  return raw.replace(/\$\{(\w+)\}/g, (_match, varName: string) => {
+    const value = process.env[varName];
+    if (value === undefined) {
+      throw new Error(
+        `Environment variable "${varName}" referenced in ${filePath} is not set. ` +
+          'Make sure it is defined in your .env file or exported in your shell.'
+      );
+    }
+    return value;
+  });
+}
+
+/**
  * Reads a JSON file from the fixture directory. Returns `undefined` if the file
- * is missing or empty (0 bytes).
+ * is missing or empty (0 bytes). Supports `${ENV_VAR}` placeholders that are
+ * resolved from `process.env` before parsing.
  */
 function readFixtureFile<T>(filePath: string): T | undefined {
   if (!fs.existsSync(filePath)) {
@@ -48,7 +67,8 @@ function readFixtureFile<T>(filePath: string): T | undefined {
   if (raw.length === 0) {
     return undefined;
   }
-  return JSON.parse(raw) as T;
+  const resolved = resolveEnvVariables(raw, filePath);
+  return JSON.parse(resolved) as T;
 }
 
 /**
@@ -65,9 +85,7 @@ function resolveEventType(input: string): EventType {
   const byKey = (EventType as Record<string, string>)[input];
   if (byKey) return byKey as EventType;
 
-  throw new Error(
-    `Unknown event_type "${input}". Must be one of: ${Object.values(EventType).join(', ')}`
-  );
+  throw new Error(`Unknown event_type "${input}". Must be one of: ${Object.values(EventType).join(', ')}`);
 }
 
 /**
@@ -144,27 +162,21 @@ function buildEvent(
   } as AirdropEvent;
 }
 
-export const testRunner = async ({
-  fixturePath,
-  functionName,
-}: TestRunnerProps) => {
+export const testRunner = async ({ fixturePath, functionName }: TestRunnerProps) => {
+  // ---------------------------------------------------------------------------
+  // 0. Load .env file so fixture templates can reference env variables
+  // ---------------------------------------------------------------------------
+  dotenv.config();
+
   // ---------------------------------------------------------------------------
   // 1. Resolve fixture directory
   // ---------------------------------------------------------------------------
   const fixturesDir = path.resolve(__dirname, '..', 'fixtures', fixturePath);
   if (!fs.existsSync(fixturesDir)) {
     // Also try from the code/fixtures location (when running compiled dist/)
-    const altDir = path.resolve(
-      __dirname,
-      '..',
-      '..',
-      'fixtures',
-      fixturePath
-    );
+    const altDir = path.resolve(__dirname, '..', '..', 'fixtures', fixturePath);
     if (!fs.existsSync(altDir)) {
-      throw new Error(
-        `Fixture directory not found: ${fixturesDir} (also tried ${altDir})`
-      );
+      throw new Error(`Fixture directory not found: ${fixturesDir} (also tried ${altDir})`);
     }
     // use altDir
     return runWithFixtureDir(altDir, functionName);
@@ -172,10 +184,7 @@ export const testRunner = async ({
   return runWithFixtureDir(fixturesDir, functionName);
 };
 
-async function runWithFixtureDir(
-  fixturesDir: string,
-  functionName?: FunctionFactoryType
-) {
+async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType) {
   // ---------------------------------------------------------------------------
   // 2. Read fixture files
   // ---------------------------------------------------------------------------
@@ -188,8 +197,7 @@ async function runWithFixtureDir(
   // ---------------------------------------------------------------------------
   // 3. Determine function name and event type
   // ---------------------------------------------------------------------------
-  const resolvedFunctionName =
-    functionName ?? fixtureEventContext?.function_name;
+  const resolvedFunctionName = functionName ?? fixtureEventContext?.function_name;
 
   if (!resolvedFunctionName) {
     throw new Error(
@@ -205,8 +213,7 @@ async function runWithFixtureDir(
     );
   }
 
-  const eventTypeStr =
-    fixtureEventContext?.event_type ?? 'START_EXTRACTING_EXTERNAL_SYNC_UNITS';
+  const eventTypeStr = fixtureEventContext?.event_type ?? 'START_EXTRACTING_EXTERNAL_SYNC_UNITS';
   const eventType = resolveEventType(eventTypeStr);
 
   console.log(`[fixture] Function : ${resolvedFunctionName}`);
