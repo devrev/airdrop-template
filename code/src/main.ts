@@ -8,8 +8,7 @@ import { testRunner } from './test-runner/test-runner';
     fixturePath: {
       type: 'string',
       demandOption: true,
-      describe:
-        'Name of the fixture folder inside code/fixtures/ (e.g. extraction_external_sync_units_start)',
+      describe: 'Name of the fixture folder inside code/fixtures/ (e.g. extraction_external_sync_units_start)',
     },
     functionName: {
       type: 'string',
@@ -21,8 +20,12 @@ import { testRunner } from './test-runner/test-runner';
       type: 'boolean',
       default: false,
       describe:
-        'Run in local development mode — log messages are printed as plain ' +
-        'text instead of full JSON objects.',
+        'Run in local development mode — log messages are printed as plain ' + 'text instead of full JSON objects.',
+    },
+    printState: {
+      type: 'boolean',
+      default: false,
+      describe: 'Print the adapter state every time the function updates it ' + '(posts to worker_data_url.update).',
     },
   }).argv;
 
@@ -38,5 +41,6 @@ import { testRunner } from './test-runner/test-runner';
   await testRunner({
     fixturePath: argv.fixturePath,
     functionName: argv.functionName as FunctionFactoryType | undefined,
+    printState: argv.printState,
   });
 })();

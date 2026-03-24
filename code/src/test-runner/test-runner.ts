@@ -35,6 +35,8 @@ export interface TestRunnerProps {
   fixturePath: string;
   /** Which function to run — overrides event_context.json's function_name if set */
   functionName?: FunctionFactoryType;
+  /** Print the adapter state on every worker_data_url.update call */
+  printState?: boolean;
 }
 
 /**
@@ -162,15 +164,10 @@ function buildEvent(
   } as AirdropEvent;
 }
 
-export const testRunner = async ({ fixturePath, functionName }: TestRunnerProps) => {
-  // ---------------------------------------------------------------------------
-  // 0. Load .env file so fixture templates can reference env variables
-  // ---------------------------------------------------------------------------
+export const testRunner = async ({ fixturePath, functionName, printState }: TestRunnerProps) => {
   dotenv.config();
 
-  // ---------------------------------------------------------------------------
-  // 1. Resolve fixture directory
-  // ---------------------------------------------------------------------------
+  // Resolve fixture directory
   const fixturesDir = path.resolve(__dirname, '..', 'fixtures', fixturePath);
   if (!fs.existsSync(fixturesDir)) {
     // Also try from the code/fixtures location (when running compiled dist/)
@@ -179,24 +176,45 @@ export const testRunner = async ({ fixturePath, functionName }: TestRunnerProps)
       throw new Error(`Fixture directory not found: ${fixturesDir} (also tried ${altDir})`);
     }
     // use altDir
-    return runWithFixtureDir(altDir, functionName);
+    return runWithFixtureDir(altDir, functionName, printState);
   }
-  return runWithFixtureDir(fixturesDir, functionName);
+  return runWithFixtureDir(fixturesDir, functionName, printState);
 };
 
-async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType) {
-  // ---------------------------------------------------------------------------
-  // 2. Read fixture files
-  // ---------------------------------------------------------------------------
+/**
+ * Print all state updates that were posted to the MockServer during the run.
+ * Each POST to /worker_data_url.update carries `{ state: "<JSON string>" }`.
+ */
+function printStateUpdates(mockServer: MockServer): void {
+  const requests = mockServer.getRequests('POST', '/worker_data_url.update');
+  if (requests.length === 0) {
+    console.log(`[fixture:state] No state updates were posted during this run.`);
+    return;
+  }
+
+  console.log(`[fixture:state] ${requests.length} state update(s) during this run:`);
+  for (let i = 0; i < requests.length; i++) {
+    const body = requests[i].body as { state?: string } | undefined;
+    if (body?.state) {
+      try {
+        const parsed = JSON.parse(body.state);
+        console.log(`[fixture:state] Update #${i + 1}:`);
+        console.log(JSON.stringify(parsed, null, 2));
+      } catch {
+        console.log(`[fixture:state] Update #${i + 1} (raw): ${body.state}`);
+      }
+    }
+  }
+}
+
+async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType, printState?: boolean) {
   const eventContextPath = path.join(fixturesDir, 'event_context.json');
   const statePath = path.join(fixturesDir, 'state.json');
 
   const fixtureEventContext = readFixtureFile<FixtureEventContext>(eventContextPath);
   const fixtureState = readFixtureFile<Record<string, unknown>>(statePath);
 
-  // ---------------------------------------------------------------------------
-  // 3. Determine function name and event type
-  // ---------------------------------------------------------------------------
+  // Determine function name and event type
   const resolvedFunctionName = functionName ?? fixtureEventContext?.function_name;
 
   if (!resolvedFunctionName) {
@@ -220,17 +238,13 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
   console.log(`[fixture] Event    : ${eventType}`);
   console.log(`[fixture] Fixture  : ${fixturesDir}`);
 
-  // ---------------------------------------------------------------------------
-  // 4. Start MockServer
-  // ---------------------------------------------------------------------------
+  // Start MockServer
   const mockServer = new MockServer(0);
   await mockServer.start();
 
   console.log(`[fixture] MockServer started on ${mockServer.baseUrl}`);
 
-  // ---------------------------------------------------------------------------
-  // 5. Inject state from state.json
-  // ---------------------------------------------------------------------------
+  // Inject state from state.json
   if (fixtureState) {
     mockServer.setRoute({
       path: '/worker_data_url.get',
@@ -243,9 +257,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     console.log(`[fixture] No state.json found (or empty) — using default empty state`);
   }
 
-  // ---------------------------------------------------------------------------
-  // 6. Build event and run the function
-  // ---------------------------------------------------------------------------
+  // Build event and run the function
   const event = buildEvent(mockServer.baseUrl, eventType, fixtureEventContext);
 
   const run = functionFactory[resolvedFunctionName];
@@ -257,6 +269,9 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     console.error(`[fixture] Function threw an error:`, err);
     process.exitCode = 1;
   } finally {
+    if (printState) {
+      printStateUpdates(mockServer);
+    }
     await mockServer.stop();
     console.log(`[fixture] MockServer stopped`);
   }
