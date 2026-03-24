@@ -14,7 +14,7 @@ import { testRunner } from './test-runner/test-runner';
       type: 'string',
       describe:
         'Function to run (e.g. "extraction" or "loading"). ' +
-        'Can also be set via "function_name" in event_context.json.',
+        'Can also be set via "function_name" in airdrop_message.json.',
     },
     local: {
       type: 'boolean',

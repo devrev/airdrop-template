@@ -43,6 +43,8 @@ export interface TestRunnerProps {
 /**
  * Replace all `${VAR_NAME}` placeholders in a string with values from
  * `process.env`. Throws if a referenced variable is not set.
+ * Values are JSON-escaped so that special characters (quotes, backslashes, etc.)
+ * don't break the JSON structure.
  */
 function resolveEnvVariables(raw: string, filePath: string): string {
   return raw.replace(/\$\{(\w+)\}/g, (_match, varName: string) => {
@@ -53,7 +55,9 @@ function resolveEnvVariables(raw: string, filePath: string): string {
           'Make sure it is defined in your .env file or exported in your shell.'
       );
     }
-    return value;
+    // JSON.stringify adds surrounding quotes and escapes special chars.
+    // Slice off the quotes since the placeholder is already inside a JSON string value.
+    return JSON.stringify(value).slice(1, -1);
   });
 }
 
@@ -105,7 +109,7 @@ function buildEvent(mockServerBaseUrl: string, eventType: EventType, fixture?: F
     ...fixture?.connection_data,
   };
 
-  const eventContext = {
+  const eventContext: EventContext = {
     dev_org: 'test_dev_org',
     dev_oid: 'test_dev_oid',
     dev_org_id: 'test_dev_org_id',
@@ -143,7 +147,7 @@ function buildEvent(mockServerBaseUrl: string, eventType: EventType, fixture?: F
     worker_data_url: `${mockServerBaseUrl}/worker_data_url`,
   };
 
-  return {
+  const event: AirdropEvent = {
     context: {
       secrets: {
         service_account_token: 'test_service_account_token',
@@ -164,21 +168,18 @@ function buildEvent(mockServerBaseUrl: string, eventType: EventType, fixture?: F
       global_values: {},
       event_sources: {},
     },
-  } as AirdropEvent;
+  };
+
+  return event;
 }
 
 export const testRunner = async ({ fixturePath, functionName, printState }: TestRunnerProps) => {
   dotenv.config();
 
-  // Resolve fixture directory
-  const fixturesDir = path.resolve(__dirname, '..', 'fixtures', fixturePath);
+  // Resolve fixture directory from project root (process.cwd())
+  const fixturesDir = path.resolve(process.cwd(), 'fixtures', fixturePath);
   if (!fs.existsSync(fixturesDir)) {
-    // Also try from the code/fixtures location (when running compiled dist/)
-    const altDir = path.resolve(__dirname, '..', '..', 'fixtures', fixturePath);
-    if (!fs.existsSync(altDir)) {
-      throw new Error(`Fixture directory not found: ${fixturesDir} (also tried ${altDir})`);
-    }
-    return runWithFixtureDir(altDir, functionName, printState);
+    throw new Error(`Fixture directory not found: ${fixturesDir}`);
   }
   return runWithFixtureDir(fixturesDir, functionName, printState);
 };
