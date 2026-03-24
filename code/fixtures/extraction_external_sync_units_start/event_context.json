@@ -1,0 +1,10 @@
+{
+  "event_type": "START_EXTRACTING_EXTERNAL_SYNC_UNITS",
+  "function_name": "extraction",
+  "connection_data": {
+    "org_id": "test_org",
+    "org_name": "Test Organization",
+    "key": "test-api-key",
+    "key_type": "pat"
+  }
+}
