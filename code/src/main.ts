@@ -8,7 +8,7 @@ import { testRunner } from './test-runner/test-runner';
     fixturePath: {
       type: 'string',
       demandOption: true,
-      describe: 'Name of the fixture folder inside code/fixtures/ (e.g. extraction_external_sync_units_start)',
+      describe: 'Name of the fixture folder inside code/fixtures/ (e.g. start_extracting_external_sync_units)',
     },
     functionName: {
       type: 'string',

@@ -2,38 +2,39 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { AirdropEvent, EventType, MockServer } from '@devrev/ts-adaas';
+import { AirdropEvent, ConnectionData, EventContext, EventData, EventType, MockServer } from '@devrev/ts-adaas';
 
 import { functionFactory, FunctionFactoryType } from '../function-factory';
 
 /**
- * Shape of the event_context.json fixture file.
- * Only `event_type` is required — everything else has sensible defaults.
- * `function_name` can be provided here to avoid passing --functionName on the CLI.
+ * Shape of the `airdrop_message.json` fixture file.
+ *
+ * Mirrors the SDK's {@link AirdropMessage} with two differences:
+ *  - Every field except `event_type` is optional (defaults are provided).
+ *  - `function_name` is an extra runner-only field (not part of AirdropMessage)
+ *    that selects which snap-in function to invoke.
  */
-export interface FixtureEventContext {
-  /** Which event to simulate, e.g. "START_EXTRACTING_EXTERNAL_SYNC_UNITS" */
+export interface FixtureAirdropMessage {
+  /** Which event to simulate, e.g. "START_EXTRACTING_DATA" (required). */
   event_type: string;
 
-  /** Optional — can also be passed via --functionName CLI flag */
+  /** Runner-only: which function to call. Can also be set via --functionName CLI flag. */
   function_name?: FunctionFactoryType;
 
-  /** Override connection_data fields */
-  connection_data?: {
-    org_id?: string;
-    org_name?: string;
-    key?: string;
-    key_type?: string;
-  };
+  /** Partial connection data — merged with test defaults. */
+  connection_data?: Partial<ConnectionData>;
 
-  /** Override any event_context fields (dev_oid, import_slug, etc.) */
-  event_context_overrides?: Record<string, unknown>;
+  /** Partial event context — merged with test defaults. MockServer URLs are always injected. */
+  event_context?: Partial<EventContext>;
+
+  /** Optional event data — passed through as-is (defaults to {}). */
+  event_data?: Partial<EventData>;
 }
 
 export interface TestRunnerProps {
   /** Folder name inside code/fixtures/ */
   fixturePath: string;
-  /** Which function to run — overrides event_context.json's function_name if set */
+  /** Which function to run — overrides airdrop_message.json's function_name if set */
   functionName?: FunctionFactoryType;
   /** Print the adapter state on every worker_data_url.update call */
   printState?: boolean;
@@ -92,22 +93,19 @@ function resolveEventType(input: string): EventType {
 
 /**
  * Build a complete AirdropEvent with all URLs pointing at the MockServer.
+ * Fields from the fixture's airdrop_message.json are merged into the
+ * appropriate sections, with MockServer URLs always taking precedence.
  */
-function buildEvent(
-  mockServerBaseUrl: string,
-  eventType: EventType,
-  fixtureEventContext?: FixtureEventContext
-): AirdropEvent {
-  const connectionData = {
+function buildEvent(mockServerBaseUrl: string, eventType: EventType, fixture?: FixtureAirdropMessage): AirdropEvent {
+  const connectionData: ConnectionData = {
     org_id: 'test_org_id',
     org_name: 'test_org_name',
     key: 'test_key',
     key_type: 'test_key_type',
-    ...fixtureEventContext?.connection_data,
+    ...fixture?.connection_data,
   };
 
   const eventContext = {
-    callback_url: `${mockServerBaseUrl}/callback_url`,
     dev_org: 'test_dev_org',
     dev_oid: 'test_dev_oid',
     dev_org_id: 'test_dev_org_id',
@@ -136,8 +134,13 @@ function buildEvent(
     sync_unit: 'test_sync_unit',
     sync_unit_id: 'test_sync_unit_id',
     uuid: 'test_uuid',
+    // Fixture overrides are spread here — user-provided event_context fields
+    // take precedence over the test defaults above.
+    ...fixture?.event_context,
+    // MockServer URLs are always set last so they can't be accidentally
+    // overridden — the function must talk to the mock, not a real endpoint.
+    callback_url: `${mockServerBaseUrl}/callback_url`,
     worker_data_url: `${mockServerBaseUrl}/worker_data_url`,
-    ...fixtureEventContext?.event_context_overrides,
   };
 
   return {
@@ -152,7 +155,7 @@ function buildEvent(
       connection_data: connectionData,
       event_context: eventContext,
       event_type: eventType,
-      event_data: {},
+      event_data: fixture?.event_data ?? {},
     },
     execution_metadata: {
       devrev_endpoint: mockServerBaseUrl,
@@ -175,7 +178,6 @@ export const testRunner = async ({ fixturePath, functionName, printState }: Test
     if (!fs.existsSync(altDir)) {
       throw new Error(`Fixture directory not found: ${fixturesDir} (also tried ${altDir})`);
     }
-    // use altDir
     return runWithFixtureDir(altDir, functionName, printState);
   }
   return runWithFixtureDir(fixturesDir, functionName, printState);
@@ -208,19 +210,33 @@ function printStateUpdates(mockServer: MockServer): void {
 }
 
 async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType, printState?: boolean) {
-  const eventContextPath = path.join(fixturesDir, 'event_context.json');
+  const airdropMessagePath = path.join(fixturesDir, 'airdrop_message.json');
   const statePath = path.join(fixturesDir, 'state.json');
 
-  const fixtureEventContext = readFixtureFile<FixtureEventContext>(eventContextPath);
+  const fixtureMessage = readFixtureFile<FixtureAirdropMessage>(airdropMessagePath);
   const fixtureState = readFixtureFile<Record<string, unknown>>(statePath);
 
+  if (!fixtureMessage) {
+    throw new Error(
+      `Missing or empty airdrop_message.json in fixture directory: ${airdropMessagePath}. ` +
+        'Every fixture must have an airdrop_message.json with at least an "event_type" field.'
+    );
+  }
+
+  if (!fixtureMessage.event_type) {
+    throw new Error(
+      `airdrop_message.json at ${airdropMessagePath} is missing the required "event_type" field. ` +
+        'Specify an event type such as "START_EXTRACTING_DATA" or "START_EXTRACTING_EXTERNAL_SYNC_UNITS".'
+    );
+  }
+
   // Determine function name and event type
-  const resolvedFunctionName = functionName ?? fixtureEventContext?.function_name;
+  const resolvedFunctionName = functionName ?? fixtureMessage.function_name;
 
   if (!resolvedFunctionName) {
     throw new Error(
       'No function name provided. Either pass --functionName on the CLI ' +
-        'or set "function_name" in event_context.json.'
+        'or set "function_name" in airdrop_message.json.'
     );
   }
 
@@ -231,8 +247,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     );
   }
 
-  const eventTypeStr = fixtureEventContext?.event_type ?? 'START_EXTRACTING_EXTERNAL_SYNC_UNITS';
-  const eventType = resolveEventType(eventTypeStr);
+  const eventType = resolveEventType(fixtureMessage.event_type);
 
   console.log(`[fixture] Function : ${resolvedFunctionName}`);
   console.log(`[fixture] Event    : ${eventType}`);
@@ -244,21 +259,21 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
 
   console.log(`[fixture] MockServer started on ${mockServer.baseUrl}`);
 
-  // Inject state from state.json
+  // Inject state from state.json (or default to empty state)
+  mockServer.setRoute({
+    path: '/worker_data_url.get',
+    method: 'GET',
+    status: 200,
+    body: { state: JSON.stringify(fixtureState ?? {}) },
+  });
   if (fixtureState) {
-    mockServer.setRoute({
-      path: '/worker_data_url.get',
-      method: 'GET',
-      status: 200,
-      body: { state: JSON.stringify(fixtureState) },
-    });
     console.log(`[fixture] Injected state from state.json`);
   } else {
     console.log(`[fixture] No state.json found (or empty) — using default empty state`);
   }
 
   // Build event and run the function
-  const event = buildEvent(mockServer.baseUrl, eventType, fixtureEventContext);
+  const event = buildEvent(mockServer.baseUrl, eventType, fixtureMessage);
 
   const run = functionFactory[resolvedFunctionName];
 
