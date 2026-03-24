@@ -34,7 +34,7 @@ import { testRunner } from './test-runner/test-runner';
   // instead of JSON).  We splice it right after the script path (index 2) so
   // that yargs inside spawn() sees it as a positional, not as a value of
   // another flag.
-  if (argv.local && !process.argv.includes('local')) {
+  if (argv.local && process.argv[2] !== 'local') {
     process.argv.splice(2, 0, 'local');
   }
 
