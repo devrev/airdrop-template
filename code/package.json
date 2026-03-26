@@ -13,7 +13,7 @@
     "start": "ts-node ./src/main.ts",
     "start:watch": "nodemon ./src/main.ts",
     "start:production": "node dist/main.js",
-    "fixture": "ts-node ./src/main.ts",
+    "run:local": "ts-node ./src/main.ts",
     "test:server": "nodemon --watch src  --watch test test/main.ts",
     "test": "jest",
     "test:watch": "jest --watch"
