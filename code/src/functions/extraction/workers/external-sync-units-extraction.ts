@@ -1,10 +1,25 @@
-import { ExternalSyncUnit, ExtractorEventType, processTask } from '@devrev/ts-adaas';
+import {
+  AirSyncDefaultItemTypes,
+  ExternalSyncUnit,
+  ExtractorEventType,
+  processTask,
+} from '@devrev/ts-adaas';
 
 import { normalizeTodoList } from '../../external-system/data-normalization';
 import { HttpClient } from '../../external-system/http-client';
 
 processTask({
   task: async ({ adapter }) => {
+    adapter.initializeRepos([
+      {
+        itemType: AirSyncDefaultItemTypes.EXTERNAL_SYNC_UNITS,
+        overridenOptions: {
+          batchSize: 25000,
+          skipConfirmation: true,
+        },
+      },
+    ]);
+
     // TODO: Replace with HTTP client that will be used to make API calls
     // to the external system.
     const httpClient = new HttpClient(adapter.event);
@@ -17,9 +32,11 @@ processTask({
     // your needs.
     const externalSyncUnits: ExternalSyncUnit[] = todoLists.map((todoList) => normalizeTodoList(todoList));
 
-    await adapter.emit(ExtractorEventType.ExternalSyncUnitExtractionDone, {
-      external_sync_units: externalSyncUnits,
-    });
+    await adapter
+      .getRepo(AirSyncDefaultItemTypes.EXTERNAL_SYNC_UNITS)
+      ?.push(externalSyncUnits);
+
+    await adapter.emit(ExtractorEventType.ExternalSyncUnitExtractionDone);
   },
   onTimeout: async ({ adapter }) => {
     await adapter.emit(ExtractorEventType.ExternalSyncUnitExtractionError, {
