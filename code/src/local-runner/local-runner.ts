@@ -24,7 +24,6 @@ export interface FixtureEvent {
 export interface LocalRunnerProps {
   fixturePath: string;
   functionName?: FunctionFactoryType;
-  printState?: boolean;
 }
 
 /**
@@ -133,39 +132,17 @@ function buildEvent(mockServerBaseUrl: string, eventType: EventType, fixture?: F
   return event;
 }
 
-export const localRunner = async ({ fixturePath, functionName, printState }: LocalRunnerProps) => {
+export const localRunner = async ({ fixturePath, functionName }: LocalRunnerProps) => {
   dotenv.config();
 
   const fixturesDir = path.resolve(__dirname, '../../fixtures', fixturePath);
   if (!fs.existsSync(fixturesDir)) {
     throw new Error(`Fixture directory not found: ${fixturesDir}`);
   }
-  return runWithFixtureDir(fixturesDir, functionName, printState);
+  return runWithFixtureDir(fixturesDir, functionName);
 };
 
-function printStateUpdates(mockServer: MockServer): void {
-  const requests = mockServer.getRequests('POST', '/worker_data_url.update');
-  if (requests.length === 0) {
-    console.log(`[local-runner:state] No state updates were posted during this run.`);
-    return;
-  }
-
-  console.log(`[local-runner:state] ${requests.length} state update(s) during this run:`);
-  for (let i = 0; i < requests.length; i++) {
-    const body = requests[i].body as { state?: string } | undefined;
-    if (body?.state) {
-      try {
-        const parsed = JSON.parse(body.state);
-        console.log(`[local-runner:state] Update #${i + 1}:`);
-        console.log(JSON.stringify(parsed, null, 2));
-      } catch {
-        console.log(`[local-runner:state] Update #${i + 1} (raw): ${body.state}`);
-      }
-    }
-  }
-}
-
-async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType, printState?: boolean) {
+async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType) {
   const eventPath = path.join(fixturesDir, 'event.json');
   const statePath = path.join(fixturesDir, 'state.json');
 
@@ -234,9 +211,6 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     console.error(`[local-runner] Function threw an error:`, err);
     process.exitCode = 1;
   } finally {
-    if (printState) {
-      printStateUpdates(mockServer);
-    }
     await mockServer.stop();
     console.log(`[local-runner] MockServer stopped`);
   }

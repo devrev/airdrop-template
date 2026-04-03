@@ -20,12 +20,7 @@ import { localRunner } from './local-runner/local-runner';
       default: false,
       describe:
         'Run in local development mode — log messages are printed as plain ' + 'text instead of full JSON objects.',
-    },
-    printState: {
-      type: 'boolean',
-      default: false,
-      describe: 'Print the adapter state every time the function updates it ' + '(posts to worker_data_url.update).',
-    },
+    }
   }).argv;
 
   // The SDK's spawn() checks for a "local" positional argument in process.argv
@@ -38,6 +33,5 @@ import { localRunner } from './local-runner/local-runner';
   await localRunner({
     fixturePath: argv.fixturePath,
     functionName: argv.functionName as FunctionFactoryType | undefined,
-    printState: argv.printState,
   });
 })();
