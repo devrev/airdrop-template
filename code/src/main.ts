@@ -1,7 +1,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { FunctionFactoryType } from './function-factory';
-import { localRunner } from './local-runner/local-runner';
+import { testRunner } from './test-runner/test-runner';
 
 (async () => {
   const argv = await yargs(hideBin(process.argv)).options({
@@ -30,7 +30,7 @@ import { localRunner } from './local-runner/local-runner';
     process.argv.splice(2, 0, 'local');
   }
 
-  await localRunner({
+  await testRunner({
     fixturePath: argv.fixturePath,
     functionName: argv.functionName as FunctionFactoryType | undefined,
   });

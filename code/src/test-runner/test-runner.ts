@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { AirdropEvent, ConnectionData, EventContext, EventData, EventType, MockServer } from '@devrev/ts-adaas';
+import { ConnectionData, createMockEvent, EventContext, EventData, EventType, ExtractorEventType, LoaderEventType, MockServer } from '@devrev/ts-adaas';
 
 import { functionFactory, FunctionFactoryType } from '../function-factory';
 
@@ -10,12 +10,9 @@ import { functionFactory, FunctionFactoryType } from '../function-factory';
  * Shape of the `event.json` fixture file.
  *
  * Every field except `event_type` is optional (defaults are provided).
- * `function_name` is a runner-only field that selects which snap-in function
- * to invoke — it is not part of the SDK's AirdropMessage.
  */
 export interface FixtureEvent {
   event_type: string;
-  function_name?: FunctionFactoryType;
   connection_data?: Partial<ConnectionData>;
   event_context?: Partial<EventContext>;
   event_data?: Partial<EventData>;
@@ -36,7 +33,7 @@ function resolveEnvVariables(raw: string, filePath: string): string {
     if (value === undefined) {
       throw new Error(
         `Environment variable "${varName}" referenced in ${filePath} is not set. ` +
-          'Make sure it is defined in your .env file or exported in your shell.'
+        'Make sure it is defined in your .env file or exported in your shell.'
       );
     }
     return JSON.stringify(value).slice(1, -1);
@@ -62,77 +59,7 @@ function resolveEventType(input: string): EventType {
   throw new Error(`Unknown event_type "${input}". Must be one of: ${Object.values(EventType).join(', ')}`);
 }
 
-function buildEvent(mockServerBaseUrl: string, eventType: EventType, fixture?: FixtureEvent): AirdropEvent {
-  const connectionData: ConnectionData = {
-    org_id: 'test_org_id',
-    org_name: 'test_org_name',
-    key: 'test_key',
-    key_type: 'test_key_type',
-    ...fixture?.connection_data,
-  };
-
-  const eventContext: EventContext = {
-    dev_org: 'test_dev_org',
-    dev_oid: 'test_dev_oid',
-    dev_org_id: 'test_dev_org_id',
-    dev_user: 'test_dev_user',
-    dev_user_id: 'test_dev_user_id',
-    dev_uid: 'test_dev_uid',
-    event_type_adaas: 'test_event_type_adaas',
-    external_sync_unit: 'test_external_sync_unit',
-    external_sync_unit_id: 'test_external_sync_unit_id',
-    external_sync_unit_name: 'test_external_sync_unit_name',
-    external_system: 'test_external_system',
-    external_system_id: 'test_external_system_id',
-    external_system_name: 'test_external_system_name',
-    external_system_type: 'test_external_system_type',
-    import_slug: 'test_import_slug',
-    mode: 'INITIAL',
-    request_id: 'test_request_id',
-    request_id_adaas: 'test_request_id_adaas',
-    run_id: 'test_run_id',
-    sequence_version: 'test_sequence_version',
-    snap_in_slug: 'test_snap_in_slug',
-    snap_in_version_id: 'test_snap_in_version_id',
-    sync_run: 'test_sync_run',
-    sync_run_id: 'test_sync_run_id',
-    sync_tier: 'test_sync_tier',
-    sync_unit: 'test_sync_unit',
-    sync_unit_id: 'test_sync_unit_id',
-    uuid: 'test_uuid',
-    ...fixture?.event_context,
-    // MockServer URLs must always override fixture values.
-    callback_url: `${mockServerBaseUrl}/callback_url`,
-    worker_data_url: `${mockServerBaseUrl}/worker_data_url`,
-  };
-
-  const event = {
-    context: {
-      secrets: {
-        service_account_token: 'test_service_account_token',
-      },
-      snap_in_version_id: 'test_snap_in_version_id',
-      snap_in_id: 'test_snap_in_id',
-    },
-    payload: {
-      connection_data: connectionData,
-      event_context: eventContext,
-      event_type: eventType,
-      event_data: fixture?.event_data ?? {},
-    },
-    execution_metadata: {
-      devrev_endpoint: mockServerBaseUrl,
-    },
-    input_data: {
-      global_values: {},
-      event_sources: {},
-    },
-  } satisfies AirdropEvent;
-
-  return event;
-}
-
-export const localRunner = async ({ fixturePath, functionName }: LocalRunnerProps) => {
+export const testRunner = async ({ fixturePath, functionName }: LocalRunnerProps) => {
   dotenv.config();
 
   const fixturesDir = path.resolve(__dirname, '../../fixtures', fixturePath);
@@ -141,6 +68,16 @@ export const localRunner = async ({ fixturePath, functionName }: LocalRunnerProp
   }
   return runWithFixtureDir(fixturesDir, functionName);
 };
+
+function getFunctionName(event_type: string): FunctionFactoryType {
+  if (event_type.indexOf('EXTRACT') != -1) {
+    return 'extraction';
+  } else if (event_type.indexOf('LOAD') != -1) {
+    return 'loading';
+  }
+
+  throw new Error(`No functionName found for event ${event_type}. Specify functionName using '--functionName' parameter.`);
+}
 
 async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType) {
   const eventPath = path.join(fixturesDir, 'event.json');
@@ -152,18 +89,18 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
   if (!fixtureMessage) {
     throw new Error(
       `Missing or empty event.json in fixture directory: ${eventPath}. ` +
-        'Every fixture must have an event.json with at least an "event_type" field.'
+      'Every fixture must have an event.json with at least an "event_type" field.'
     );
   }
 
   if (!fixtureMessage.event_type) {
     throw new Error(
       `event.json at ${eventPath} is missing the required "event_type" field. ` +
-        'Specify an event type such as "START_EXTRACTING_DATA" or "START_EXTRACTING_EXTERNAL_SYNC_UNITS".'
+      'Specify an event type such as "START_EXTRACTING_DATA" or "START_EXTRACTING_EXTERNAL_SYNC_UNITS".'
     );
   }
 
-  const resolvedFunctionName = functionName ?? fixtureMessage.function_name;
+  const resolvedFunctionName = functionName ?? getFunctionName(fixtureMessage.event_type);
 
   if (!resolvedFunctionName) {
     throw new Error(
@@ -171,10 +108,10 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     );
   }
 
-  if (!functionFactory[resolvedFunctionName]) {
+  if (!(resolvedFunctionName in functionFactory)) {
     throw new Error(
       `Function "${resolvedFunctionName}" not found in functionFactory. ` +
-        `Available: ${Object.keys(functionFactory).join(', ')}`
+      `Available: ${Object.keys(functionFactory).join(', ')}`
     );
   }
 
@@ -201,7 +138,16 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     console.log(`[local-runner] No state.json found — using default empty state`);
   }
 
-  const event = buildEvent(mockServer.baseUrl, eventType, fixtureMessage);
+  const event = createMockEvent({
+    mockServerBaseUrl: mockServer.baseUrl,
+    eventType,
+    fixture: {
+      connection_data: fixtureMessage.connection_data,
+      event_context: fixtureMessage.event_context,
+      event_data: fixtureMessage.event_data,
+    },
+  });
+
   const run = functionFactory[resolvedFunctionName];
 
   try {

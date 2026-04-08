@@ -1,6 +1,5 @@
 {
   "event_type": "START_EXTRACTING_DATA",
-  "function_name": "extraction",
   "connection_data": {
     "org_id": "test_org",
     "org_name": "Test Organization",
