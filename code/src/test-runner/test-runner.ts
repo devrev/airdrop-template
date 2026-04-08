@@ -82,9 +82,11 @@ function getFunctionName(event_type: string): FunctionFactoryType {
 async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFactoryType) {
   const eventPath = path.join(fixturesDir, 'event.json');
   const statePath = path.join(fixturesDir, 'state.json');
+  const extractionScopePath = path.join(fixturesDir, 'extraction_scope.json');
 
   const fixtureMessage = readFixtureFile<FixtureEvent>(eventPath);
   const fixtureState = readFixtureFile<Record<string, unknown>>(statePath);
+  const fixtureExtractionScope = readFixtureFile<Record<string, unknown>>(extractionScopePath);
 
   if (!fixtureMessage) {
     throw new Error(
@@ -130,7 +132,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     path: '/worker_data_url.get',
     method: 'GET',
     status: 200,
-    body: { state: JSON.stringify(fixtureState ?? {}) },
+    body: { state: JSON.stringify(fixtureState ?? {}), objects: JSON.stringify(fixtureExtractionScope ?? {}) },
   });
   if (fixtureState) {
     console.log(`[local-runner] Injected state from state.json`);
