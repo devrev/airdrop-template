@@ -130,6 +130,8 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
 
   const event = createMockEvent(mockServer.baseUrl, fixtureEvent);
 
+  process.argv.push("--local");
+
   const run = functionFactory[resolvedFunctionName];
 
   try {
