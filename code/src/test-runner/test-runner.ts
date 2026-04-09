@@ -140,10 +140,9 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     console.log(`[test-runner] No state.json found — using default empty state`);
   }
 
-  const event = createMockEvent({
-    mockServerBaseUrl: mockServer.baseUrl,
-    eventType,
-    fixture: {
+  const event = createMockEvent(mockServer.baseUrl, {
+    payload: {
+      event_type: eventType,
       connection_data: fixtureEvent.connection_data,
       event_context: fixtureEvent.event_context,
       event_data: fixtureEvent.event_data,
