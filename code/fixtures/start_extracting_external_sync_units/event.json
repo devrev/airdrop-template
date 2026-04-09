@@ -1,6 +1,8 @@
 {
-  "event_type": "START_EXTRACTING_EXTERNAL_SYNC_UNITS",
   "function_name": "extraction",
+  "payload": {
+    "event_type": "START_EXTRACTING_EXTERNAL_SYNC_UNITS"
+  },
   "connection_data": {
     "org_id": "test_org",
     "org_name": "Test Organization",

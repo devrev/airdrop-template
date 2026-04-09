@@ -2,21 +2,9 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { ConnectionData, createMockEvent, EventContext, EventData, EventType, ExtractorEventType, LoaderEventType, MockServer } from '@devrev/ts-adaas';
+import { AirdropEvent, createMockEvent, DeepPartial, EventType, MockServer } from '@devrev/ts-adaas';
 
 import { functionFactory, FunctionFactoryType } from '../function-factory';
-
-/**
- * Shape of the `event.json` fixture file.
- *
- * Every field except `event_type` is optional (defaults are provided).
- */
-export interface FixtureEvent {
-  event_type: string;
-  connection_data?: Partial<ConnectionData>;
-  event_context?: Partial<EventContext>;
-  event_data?: Partial<EventData>;
-}
 
 export interface LocalRunnerProps {
   fixturePath: string;
@@ -84,7 +72,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
   const statePath = path.join(fixturesDir, 'state.json');
   const extractionScopePath = path.join(fixturesDir, 'extraction_scope.json');
 
-  const fixtureEvent = readFixtureFile<FixtureEvent>(eventPath);
+  const fixtureEvent = readFixtureFile<DeepPartial<AirdropEvent>>(eventPath);
   const fixtureState = readFixtureFile<Record<string, unknown>>(statePath);
   const fixtureExtractionScope = readFixtureFile<Record<string, unknown>>(extractionScopePath);
 
@@ -95,14 +83,14 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     );
   }
 
-  if (!fixtureEvent.event_type) {
+  if (!fixtureEvent.payload?.event_type) {
     throw new Error(
       `event.json at ${eventPath} is missing the required "event_type" field. ` +
       'Specify an event type such as "START_EXTRACTING_DATA" or "START_EXTRACTING_EXTERNAL_SYNC_UNITS".'
     );
   }
 
-  const resolvedFunctionName = functionName ?? getFunctionName(fixtureEvent.event_type);
+  const resolvedFunctionName = functionName ?? getFunctionName(fixtureEvent.payload?.event_type);
 
   if (!resolvedFunctionName) {
     throw new Error(
@@ -117,7 +105,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     );
   }
 
-  const eventType = resolveEventType(fixtureEvent.event_type);
+  const eventType = resolveEventType(fixtureEvent.payload?.event_type);
 
   console.log(`[test-runner] Function : ${resolvedFunctionName}`);
   console.log(`[test-runner] Event    : ${eventType}`);
@@ -140,14 +128,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     console.log(`[test-runner] No state.json found — using default empty state`);
   }
 
-  const event = createMockEvent(mockServer.baseUrl, {
-    payload: {
-      event_type: eventType,
-      connection_data: fixtureEvent.connection_data,
-      event_context: fixtureEvent.event_context,
-      event_data: fixtureEvent.event_data,
-    },
-  });
+  const event = createMockEvent(mockServer.baseUrl, fixtureEvent);
 
   const run = functionFactory[resolvedFunctionName];
 
