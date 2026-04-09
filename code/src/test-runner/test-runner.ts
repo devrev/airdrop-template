@@ -84,25 +84,25 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
   const statePath = path.join(fixturesDir, 'state.json');
   const extractionScopePath = path.join(fixturesDir, 'extraction_scope.json');
 
-  const fixtureMessage = readFixtureFile<FixtureEvent>(eventPath);
+  const fixtureEvent = readFixtureFile<FixtureEvent>(eventPath);
   const fixtureState = readFixtureFile<Record<string, unknown>>(statePath);
   const fixtureExtractionScope = readFixtureFile<Record<string, unknown>>(extractionScopePath);
 
-  if (!fixtureMessage) {
+  if (!fixtureEvent) {
     throw new Error(
       `Missing or empty event.json in fixture directory: ${eventPath}. ` +
       'Every fixture must have an event.json with at least an "event_type" field.'
     );
   }
 
-  if (!fixtureMessage.event_type) {
+  if (!fixtureEvent.event_type) {
     throw new Error(
       `event.json at ${eventPath} is missing the required "event_type" field. ` +
       'Specify an event type such as "START_EXTRACTING_DATA" or "START_EXTRACTING_EXTERNAL_SYNC_UNITS".'
     );
   }
 
-  const resolvedFunctionName = functionName ?? getFunctionName(fixtureMessage.event_type);
+  const resolvedFunctionName = functionName ?? getFunctionName(fixtureEvent.event_type);
 
   if (!resolvedFunctionName) {
     throw new Error(
@@ -117,16 +117,16 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     );
   }
 
-  const eventType = resolveEventType(fixtureMessage.event_type);
+  const eventType = resolveEventType(fixtureEvent.event_type);
 
-  console.log(`[local-runner] Function : ${resolvedFunctionName}`);
-  console.log(`[local-runner] Event    : ${eventType}`);
-  console.log(`[local-runner] Fixture  : ${fixturesDir}`);
+  console.log(`[test-runner] Function : ${resolvedFunctionName}`);
+  console.log(`[test-runner] Event    : ${eventType}`);
+  console.log(`[test-runner] Fixture  : ${fixturesDir}`);
 
   const mockServer = new MockServer(0);
   await mockServer.start();
 
-  console.log(`[local-runner] MockServer started on ${mockServer.baseUrl}`);
+  console.log(`[test-runner] MockServer started on ${mockServer.baseUrl}`);
 
   mockServer.setRoute({
     path: '/worker_data_url.get',
@@ -135,18 +135,18 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     body: { state: JSON.stringify(fixtureState ?? {}), objects: JSON.stringify(fixtureExtractionScope ?? {}) },
   });
   if (fixtureState) {
-    console.log(`[local-runner] Injected state from state.json`);
+    console.log(`[test-runner] Injected state from state.json`);
   } else {
-    console.log(`[local-runner] No state.json found — using default empty state`);
+    console.log(`[test-runner] No state.json found — using default empty state`);
   }
 
   const event = createMockEvent({
     mockServerBaseUrl: mockServer.baseUrl,
     eventType,
     fixture: {
-      connection_data: fixtureMessage.connection_data,
-      event_context: fixtureMessage.event_context,
-      event_data: fixtureMessage.event_data,
+      connection_data: fixtureEvent.connection_data,
+      event_context: fixtureEvent.event_context,
+      event_data: fixtureEvent.event_data,
     },
   });
 
@@ -154,12 +154,12 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
 
   try {
     await run([event]);
-    console.log(`[local-runner] Function completed successfully`);
+    console.log(`[test-runner] Function completed successfully`);
   } catch (err) {
-    console.error(`[local-runner] Function threw an error:`, err);
+    console.error(`[test-runner] Function threw an error:`, err);
     process.exitCode = 1;
   } finally {
     await mockServer.stop();
-    console.log(`[local-runner] MockServer stopped`);
+    console.log(`[test-runner] MockServer stopped`);
   }
 }
