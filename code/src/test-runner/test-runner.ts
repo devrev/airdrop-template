@@ -116,16 +116,22 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
 
   console.log(`[test-runner] MockServer started on ${mockServer.baseUrl}`);
 
-  mockServer.setRoute({
-    path: '/worker_data_url.get',
-    method: 'GET',
-    status: 200,
-    body: { state: JSON.stringify(fixtureState ?? {}), objects: JSON.stringify(fixtureExtractionScope ?? {}) },
-  });
   if (fixtureState) {
+    mockServer.setRoute({
+      path: '/worker_data_url.get',
+      method: 'GET',
+      status: 200,
+      body: { state: JSON.stringify(fixtureState), objects: JSON.stringify(fixtureExtractionScope ?? {}) },
+    });
     console.log(`[test-runner] Injected state from state.json`);
   } else {
-    console.log(`[test-runner] No state.json found — using default empty state`);
+    mockServer.setRoute({
+      path: '/worker_data_url.get',
+      method: 'GET',
+      status: 404,
+      body: {},
+    });
+    console.log(`[test-runner] No state.json found — MockServer will return 404 (connector will create initial state)`);
   }
 
   const event = createMockEvent(mockServer.baseUrl, fixtureEvent);
