@@ -25,10 +25,14 @@ import { functionFactory, FunctionFactoryType } from './function-factory';
     console.error('Please make sure you have fixturePath in your command');
   }
 
-  await testRunner({
-    fixturePath: argv.fixturePath,
-    functionName: argv.functionName as FunctionFactoryType | undefined,
-    functionFactory,
-    fixturesBaseDir: path.resolve(__dirname, '../fixtures'),
-  });
+  try {
+    await testRunner({
+      fixturePath: argv.fixturePath,
+      functionName: argv.functionName as FunctionFactoryType | undefined,
+      functionFactory,
+      fixturesBaseDir: path.resolve(__dirname, '../fixtures'),
+    });
+  } catch {
+    process.exitCode = 1;
+  }
 })();
