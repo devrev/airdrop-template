@@ -1,9 +1,15 @@
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { FunctionFactoryType } from './function-factory';
-import { testRunner } from './test-runner/test-runner';
+
+import { testRunner } from '@devrev/ts-adaas';
+
+import { functionFactory, FunctionFactoryType } from './function-factory';
 
 (async () => {
+  dotenv.config();
+
   const argv = await yargs(hideBin(process.argv)).options({
     fixturePath: {
       type: 'string',
@@ -22,5 +28,7 @@ import { testRunner } from './test-runner/test-runner';
   await testRunner({
     fixturePath: argv.fixturePath,
     functionName: argv.functionName as FunctionFactoryType | undefined,
+    functionFactory,
+    fixturesBaseDir: path.resolve(__dirname, '../fixtures'),
   });
 })();
