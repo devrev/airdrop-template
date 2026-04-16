@@ -88,8 +88,7 @@ imports:
     # and with your code, if you changed the names.
     extractor_function: extraction
 
-    # TODO: Uncomment the loader function once you have implemented loading.
-    #loader_function: loading
+    loader_function: loading
 
     # The list of connection types that are available for the external system.
     # Make sure these are in sync with the keyring types in the 'keyring_types' section above.
