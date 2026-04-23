@@ -11,16 +11,16 @@ import { testRunner } from './test-runner/test-runner';
     },
     functionName: {
       type: 'string',
-      require: true,
+      require: false,
     },
   }).argv;
 
-  if (!argv.fixturePath || !argv.functionName) {
-    console.error('Please make sure you have passed fixturePath & functionName');
+  if (!argv.fixturePath) {
+    console.error('Please make sure you have fixturePath in your command');
   }
 
   await testRunner({
     fixturePath: argv.fixturePath,
-    functionName: argv.functionName as FunctionFactoryType,
+    functionName: argv.functionName as FunctionFactoryType | undefined,
   });
 })();
