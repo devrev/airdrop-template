@@ -3,14 +3,12 @@
     "connection_data": {
       "org_id": "test_org",
       "org_name": "Test Organization",
-      "key": "test-api-key",
+      "key": "${TODO_API_KEY}",
       "key_type": "pat"
     },
     "event_type": "START_EXTRACTING_DATA",
     "event_context": {
-      "external_sync_unit_id": "test_external_sync_unit_id",
-      "extract_from": "1970-01-01T00:00:00.000Z",
-      "extract_to": "2099-12-31T23:59:59.999Z"
+      "external_sync_unit_id": "test_external_sync_unit_id"
     }
   }
 }

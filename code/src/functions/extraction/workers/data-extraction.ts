@@ -24,41 +24,23 @@ const repos = [
 ];
 
 // TODO: Replace with the item types you want to extract from the external system.
-// The extractFunction receives the time window (extract_from, extract_to) resolved
-// by the SDK from the CPv2 extraction_start_time / extraction_end_time fields.
 interface ItemTypeToExtract {
   name: 'todos' | 'users' | 'attachments';
-  extractFunction: (client: HttpClient, modifiedAfter: string, modifiedBefore: string) => Promise<object[]>;
-  /**
-   * When true, the CPv2 time window is ignored and all items are always
-   * extracted. Use this for reference/identity data (e.g. users) that other
-   * item types depend on — extracting only a recent window would leave
-   * references to older records unresolvable.
-   */
-  alwaysFullExtract?: boolean;
+  extractFunction: (client: HttpClient) => Promise<object[]>;
 }
-
-// Sentinel timestamps used when alwaysFullExtract is true.
-const EPOCH = '1970-01-01T00:00:00.000Z';
-const FAR_FUTURE = '9999-12-31T23:59:59.999Z';
 
 const itemTypesToExtract: ItemTypeToExtract[] = [
   {
     name: 'todos',
-    extractFunction: (client, modifiedAfter, modifiedBefore) => client.getTodos(modifiedAfter, modifiedBefore),
+    extractFunction: (client) => client.getTodos(),
   },
   {
-    // Users are always fully extracted regardless of the CPv2 time window.
-    // They are identity/reference data: todos reference users via creator and
-    // owner fields. If only recently-modified users were extracted, older users
-    // would be missing and those references could not be resolved.
     name: 'users',
-    extractFunction: (client, modifiedAfter, modifiedBefore) => client.getUsers(modifiedAfter, modifiedBefore),
-    alwaysFullExtract: true,
+    extractFunction: (client) => client.getUsers(),
   },
   {
     name: 'attachments',
-    extractFunction: (client, modifiedAfter, modifiedBefore) => client.getAttachments(modifiedAfter, modifiedBefore),
+    extractFunction: (client) => client.getAttachments(),
   },
 ];
 
@@ -70,24 +52,14 @@ processTask<ExtractorState>({
     // to the external system.
     const httpClient = new HttpClient(adapter.event);
 
-    // CPv2: The SDK always resolves extract_from and extract_to from the
-    // platform's extraction_start_time / extraction_end_time to concrete ISO
-    // 8601 timestamps before calling the connector.
-    //
-    // For a full initial sync extract_from is the UNIX epoch
-    // ("1970-01-01T00:00:00.000Z") and extract_to is the current time, so
-    // every item passes the filter.  For an ongoing / time-scoped sync the
-    // platform sets a narrower window covering only data that changed inside
-    // that range.
-    //
-    // The connector never needs to inspect or branch on the sync mode — it
-    // always uses the provided window to filter data from the external system.
-    const { extract_from, extract_to } = adapter.event.payload.event_context;
+    // CPv2 note: if you enable TIME_SCOPED_SYNCS in manifest.yaml, read
+    // adapter.event.payload.event_context.extract_from / extract_to here and
+    // pass them to the external system query layer.
 
     // TODO: Replace with your implementation to extract data from the external
     // system. This example iterates over item types, respects the extraction
-    // scope (selective extraction) and the CPv2 time window, pushes items to
-    // the repo, and saves progress to state.
+    // scope (selective extraction), pushes items to the repo, and saves
+    // progress to state.
     for (const itemTypeToExtract of itemTypesToExtract) {
       // If the worker is about to time out, exit early so that `onTimeout`
       // can run and emit progress back to the platform.
@@ -104,13 +76,7 @@ processTask<ExtractorState>({
         continue;
       }
 
-      const items = await itemTypeToExtract.extractFunction(
-        httpClient,
-        // Both timestamps are always present ISO strings — no null check needed.
-        // Items with alwaysFullExtract bypass the CPv2 window entirely.
-        itemTypeToExtract.alwaysFullExtract ? EPOCH : extract_from as string,
-        itemTypeToExtract.alwaysFullExtract ? FAR_FUTURE : extract_to as string
-      );
+      const items = await itemTypeToExtract.extractFunction(httpClient);
       await adapter.getRepo(itemTypeToExtract.name)?.push(items);
       adapter.state[itemTypeToExtract.name].completed = true;
     }
