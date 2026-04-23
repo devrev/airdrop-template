@@ -6,12 +6,6 @@ import { ExternalAttachment, ExternalTodo, ExternalTodoList, ExternalUser } from
 //
 // This simulates an external system's database. In a real connector you would
 // replace the methods below with actual HTTP calls to your external API.
-//
-// The items span a wide range of dates so that the time-window filtering
-// behaviour (driven by CPv2's extract_from / extract_to) is clearly visible:
-//   - Some items are old (pre-2020) and will only appear in a full sync.
-//   - Some items are recent (2024-2026) and will appear in both full and
-//     narrow-window syncs.
 // ---------------------------------------------------------------------------
 
 const USERS: ExternalUser[] = [
@@ -70,28 +64,12 @@ const todosStore = new Map<string, ExternalTodo>(TODOS.map((t) => [t.id, { ...t 
 // ---------------------------------------------------------------------------
 const PAGE_SIZE = 5;
 
-function paginateAndFilter<T extends { modified_date: string }>(
-  items: T[],
-  modifiedAfter: string,
-  modifiedBefore: string
-): T[] {
-  // CPv2: Both timestamps are always valid ISO 8601 strings provided by the SDK.
-  // extract_from = UNIX epoch (1970-01-01T00:00:00.000Z) for a full sync, or the
-  // last sync boundary for an ongoing sync.  extract_to = current time.
-  // The connector never needs to branch on mode — it always uses the window.
-  const afterMs = new Date(modifiedAfter).getTime();
-  const beforeMs = new Date(modifiedBefore).getTime();
-
-  const filtered = items.filter((item) => {
-    const modifiedMs = new Date(item.modified_date).getTime();
-    return modifiedMs >= afterMs && modifiedMs <= beforeMs;
-  });
-
+function paginate<T>(items: T[]): T[] {
   // Simulate paginated retrieval. In a real connector you would loop here,
   // calling the API with limit/offset (or a cursor) until hasMore is false.
   const result: T[] = [];
-  for (let offset = 0; offset < filtered.length; offset += PAGE_SIZE) {
-    const page = filtered.slice(offset, offset + PAGE_SIZE);
+  for (let offset = 0; offset < items.length; offset += PAGE_SIZE) {
+    const page = items.slice(offset, offset + PAGE_SIZE);
     result.push(...page);
     // In production: if (page.length < PAGE_SIZE) break; // no more pages
   }
@@ -122,40 +100,23 @@ export class HttpClient {
   // TODO: Replace with actual API calls that fetch external sync units (e.g.
   // repos, projects, boards) from the external system.
   async getTodoLists(): Promise<ExternalTodoList[]> {
-    return TODO_LISTS;
+    return paginate(TODO_LISTS);
   }
 
   // TODO: Replace with actual API calls that fetch todos from the external system.
-  //
-  // Both `modifiedAfter` and `modifiedBefore` are always valid ISO 8601 strings
-  // resolved by the SDK from CPv2 extraction_start_time / extraction_end_time.
-  // For a full initial sync, modifiedAfter is the UNIX epoch
-  // ("1970-01-01T00:00:00.000Z") and modifiedBefore is the current time, so
-  // every item passes the filter.  For an ongoing sync the platform sets a
-  // narrower window covering only recently changed data.
-  async getTodos(modifiedAfter: string, modifiedBefore: string): Promise<ExternalTodo[]> {
-    return paginateAndFilter([...todosStore.values()], modifiedAfter, modifiedBefore);
+  async getTodos(): Promise<ExternalTodo[]> {
+    return paginate([...todosStore.values()]);
   }
 
   // TODO: Replace with actual API calls that fetch users from the external system.
-  async getUsers(modifiedAfter: string, modifiedBefore: string): Promise<ExternalUser[]> {
-    return paginateAndFilter(USERS, modifiedAfter, modifiedBefore);
+  async getUsers(): Promise<ExternalUser[]> {
+    return paginate(USERS);
   }
 
   // TODO: Replace with actual API calls that fetch attachments from the
   // external system.
-  async getAttachments(modifiedAfter: string, modifiedBefore: string): Promise<ExternalAttachment[]> {
-    // Attachments don't carry a modified_date in this mock, so we derive one
-    // from their parent todo's modified_date to keep the same filtering logic.
-    const attachmentsWithDates = ATTACHMENTS.map((att) => {
-      const parent = todosStore.get(att.parent_id);
-      return {
-        ...att,
-        modified_date: parent?.modified_date ?? '1970-01-01T00:00:00.000Z',
-      };
-    });
-
-    return paginateAndFilter(attachmentsWithDates, modifiedAfter, modifiedBefore);
+  async getAttachments(): Promise<ExternalAttachment[]> {
+    return paginate(ATTACHMENTS);
   }
 
   // TODO: Replace with an actual API call that creates a todo in the external system.

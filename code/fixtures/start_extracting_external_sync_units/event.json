@@ -6,7 +6,7 @@
   "connection_data": {
     "org_id": "test_org",
     "org_name": "Test Organization",
-    "key": "test-api-key",
+    "key": "${TODO_API_KEY}",
     "key_type": "pat"
   }
 }

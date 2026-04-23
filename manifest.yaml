@@ -98,4 +98,9 @@ imports:
     # The list of capabilities that the snap-in supports.
     # capabilities:
     # TODO: Uncomment if your snap-in supports time-scoped syncs.
+    # Use this only when your external API can honor a time window.
+    # The platform resolves `extraction_start_time` / `extraction_end_time` into
+    # `adapter.event.payload.event_context.extract_from` / `extract_to`; pass
+    # those values through to your external query layer instead of filtering
+    # mock data in the connector itself.
     # - TIME_SCOPED_SYNCS
