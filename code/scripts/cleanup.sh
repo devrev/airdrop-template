@@ -205,6 +205,28 @@ if [ -z "$SELECTED_INDICES" ]; then
     exit 0
 fi
 
+# Build a compact slug list for the confirm prompt.
+SELECTED_SLUGS=()
+for PACKAGE_INDEX in $SELECTED_INDICES; do
+    SELECTED_SLUGS+=("$(echo "$PACKAGES_ARRAY" | jq -r ".[$PACKAGE_INDEX].slug // \"(no slug)\"" 2>/dev/null)")
+done
+SELECTED_COUNT=${#SELECTED_SLUGS[@]}
+MAX_SHOWN=5
+if [ $SELECTED_COUNT -le $MAX_SHOWN ]; then
+    SLUG_DISPLAY=$(IFS=,; echo "${SELECTED_SLUGS[*]}" | sed 's/,/, /g')
+else
+    SHOWN=("${SELECTED_SLUGS[@]:0:$MAX_SHOWN}")
+    REMAINING=$((SELECTED_COUNT - MAX_SHOWN))
+    SLUG_DISPLAY=$(IFS=,; echo "${SHOWN[*]}" | sed 's/,/, /g')
+    SLUG_DISPLAY="$SLUG_DISPLAY, ... and $REMAINING more"
+fi
+
+echo ""
+read -r -p "Delete $SELECTED_COUNT package(s): $SLUG_DISPLAY ? [y/N]: " CONFIRM
+if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+    echo "Aborted."
+    exit 0
+fi
 echo ""
 
 # Process each selected package
