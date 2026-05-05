@@ -24,6 +24,74 @@ prompt_with_default() {
     fi
 }
 
+# Multi-select menu with arrow keys + space to toggle + Enter to confirm.
+# Arguments: $1=prompt, $2+=options
+# Returns: space-separated list of selected indices in SELECTED_INDICES (empty if none).
+multi_select_menu() {
+    local prompt="$1"
+    shift
+    local options=("$@")
+    local num_options=${#options[@]}
+    local cursor=0
+    local checked=()
+    local i
+    for ((i = 0; i < num_options; i++)); do
+        checked[i]=0
+    done
+
+    echo "$prompt"
+    echo "  (↑/↓ to navigate, space to toggle, Enter to confirm)"
+
+    display_options() {
+        for i in "${!options[@]}"; do
+            local mark="[ ]"
+            [ "${checked[$i]}" -eq 1 ] && mark="[x]"
+            if [ $i -eq $cursor ]; then
+                echo -e "  ${GREEN}> ${mark} ${options[$i]}${NC}"
+            else
+                echo "    ${mark} ${options[$i]}"
+            fi
+        done
+    }
+
+    tput civis
+    display_options
+
+    while true; do
+        local key
+        read -rsn1 key
+        if [[ $key == $'\x1b' ]]; then
+            read -rsn2 key
+            case $key in
+                '[A') [ $cursor -gt 0 ] && cursor=$((cursor - 1)) ;;
+                '[B') [ $cursor -lt $((num_options - 1)) ] && cursor=$((cursor + 1)) ;;
+            esac
+            tput cuu $num_options
+            display_options
+        elif [[ $key == " " ]]; then
+            if [ "${checked[$cursor]}" -eq 0 ]; then
+                checked[$cursor]=1
+            else
+                checked[$cursor]=0
+            fi
+            tput cuu $num_options
+            display_options
+        elif [[ $key == "" ]]; then
+            break
+        fi
+    done
+
+    tput cnorm
+
+    SELECTED_INDICES=""
+    for i in "${!checked[@]}"; do
+        if [ "${checked[$i]}" -eq 1 ]; then
+            SELECTED_INDICES="$SELECTED_INDICES $i"
+        fi
+    done
+    SELECTED_INDICES="${SELECTED_INDICES# }"
+}
+
 # Find project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CODE_DIR="$(dirname "$SCRIPT_DIR")"
@@ -98,8 +166,8 @@ if [ -z "$PACKAGES" ]; then
     exit 0
 fi
 
-# Convert JSONL to JSON array
-PACKAGES_ARRAY=$(echo "$PACKAGES" | jq -s '.' 2>/dev/null)
+# Convert JSONL to JSON array, newest packages first.
+PACKAGES_ARRAY=$(echo "$PACKAGES" | jq -s 'sort_by(.created_date) | reverse' 2>/dev/null)
 PACKAGE_COUNT=$(echo "$PACKAGES_ARRAY" | jq 'length' 2>/dev/null)
 
 if [ -z "$PACKAGE_COUNT" ] || [ "$PACKAGE_COUNT" == "0" ]; then
@@ -107,37 +175,38 @@ if [ -z "$PACKAGE_COUNT" ] || [ "$PACKAGE_COUNT" == "0" ]; then
     exit 0
 fi
 
-echo "Found $PACKAGE_COUNT package(s)"
+echo "Found $PACKAGE_COUNT package(s) in $DEV_ORG ($DEVREV_ENV)"
 echo ""
 
-# Preview what will be deleted and require explicit confirmation.
-echo "The following snap-in package(s) will be deleted from $DEV_ORG ($DEVREV_ENV):"
-echo ""
-PREVIEW_INDEX=0
-while [ $PREVIEW_INDEX -lt $PACKAGE_COUNT ]; do
-    PREVIEW_SLUG=$(echo "$PACKAGES_ARRAY" | jq -r ".[$PREVIEW_INDEX].slug // \"(no slug)\"" 2>/dev/null)
-    PREVIEW_ID=$(echo "$PACKAGES_ARRAY" | jq -r ".[$PREVIEW_INDEX].id" 2>/dev/null)
-    PREVIEW_VER_COUNT=$(devrev snap_in_version list --package "$PREVIEW_ID" 2>/dev/null | grep -c .)
-    printf "  %-40s  %s  (%d version(s))\n" "$PREVIEW_SLUG" "$PREVIEW_ID" "$PREVIEW_VER_COUNT"
-    PREVIEW_INDEX=$((PREVIEW_INDEX + 1))
+# Build one row per package: "<slug>  <YYYY-MM-DD>  (N version(s))".
+LABELS=()
+LABEL_INDEX=0
+while [ $LABEL_INDEX -lt $PACKAGE_COUNT ]; do
+    LABEL_SLUG=$(echo "$PACKAGES_ARRAY" | jq -r ".[$LABEL_INDEX].slug // \"(no slug)\"" 2>/dev/null)
+    LABEL_ID=$(echo "$PACKAGES_ARRAY" | jq -r ".[$LABEL_INDEX].id" 2>/dev/null)
+    LABEL_DATE=$(echo "$PACKAGES_ARRAY" | jq -r ".[$LABEL_INDEX].created_date // \"\"" 2>/dev/null | cut -c1-10)
+    LABEL_VER_COUNT=$(devrev snap_in_version list --package "$LABEL_ID" 2>/dev/null | grep -c .)
+    LABELS+=("$(printf '%-40s  %s  (%d version(s))' "$LABEL_SLUG" "$LABEL_DATE" "$LABEL_VER_COUNT")")
+    LABEL_INDEX=$((LABEL_INDEX + 1))
 done
-echo ""
-read -r -p "Delete $PACKAGE_COUNT snap-in package(s) and their version(s)? [y/N]: " CONFIRM
-if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
-    echo "Aborted."
+
+multi_select_menu "Select snap-in package(s) to delete:" "${LABELS[@]}"
+
+if [ -z "$SELECTED_INDICES" ]; then
+    echo "No packages selected. Aborted."
     exit 0
 fi
+
 echo ""
 
-# Process each package
-PACKAGE_INDEX=0
-while true; do
+# Process each selected package
+for PACKAGE_INDEX in $SELECTED_INDICES; do
     PACKAGE_ID=$(echo "$PACKAGES_ARRAY" | jq -r ".[$PACKAGE_INDEX].id" 2>/dev/null)
-    
+
     if [ -z "$PACKAGE_ID" ] || [ "$PACKAGE_ID" == "null" ]; then
-        break
+        continue
     fi
-    
+
     echo "Package: $PACKAGE_ID"
     
     # Get versions for this package
@@ -176,7 +245,6 @@ while true; do
     fi
     
     echo ""
-    PACKAGE_INDEX=$((PACKAGE_INDEX + 1))
 done
 
 success "Cleanup complete!"
