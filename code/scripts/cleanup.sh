@@ -66,13 +66,25 @@ fi
 DEVREV_ENV="${ENV:-prod}"
 
 echo ""
-# Authenticate
-echo "Authenticating as $USER_EMAIL into $DEV_ORG ($DEVREV_ENV)..."
-devrev profiles authenticate --env "$DEVREV_ENV" --usr "$USER_EMAIL" --org "$DEV_ORG" --expiry 5
+# Skip authenticate if the stored token for this env/org/user is still valid.
+EXPIRY_RAW=$(devrev profiles get-token expiry --env "$DEVREV_ENV" --org "$DEV_ORG" --usr "$USER_EMAIL" 2>/dev/null)
+EXPIRY_EPOCH=""
+if [ -n "$EXPIRY_RAW" ]; then
+    EXPIRY_EPOCH=$(date -d "$EXPIRY_RAW" +%s 2>/dev/null \
+        || date -j -f "%Y-%m-%d %H:%M:%S.%N %z %Z" "$EXPIRY_RAW" +%s 2>/dev/null \
+        || date -j -f "%Y-%m-%d %H:%M:%S" "${EXPIRY_RAW%% +*}" +%s 2>/dev/null)
+fi
+NOW_EPOCH=$(date +%s)
 
-if [ $? -ne 0 ]; then
-    error "DevRev authentication failed"
-    exit 1
+if [ -n "$EXPIRY_EPOCH" ] && [ "$EXPIRY_EPOCH" -gt "$NOW_EPOCH" ]; then
+    success "Already authenticated as $USER_EMAIL into $DEV_ORG ($DEVREV_ENV) — token valid until $EXPIRY_RAW"
+else
+    echo "Authenticating as $USER_EMAIL into $DEV_ORG ($DEVREV_ENV)..."
+    if ! devrev profiles authenticate --env "$DEVREV_ENV" --usr "$USER_EMAIL" --org "$DEV_ORG" --expiry 5; then
+        error "DevRev authentication failed"
+        exit 1
+    fi
+    success "Authenticated"
 fi
 
 echo "Cleaning up snap-in packages and versions..."
@@ -96,6 +108,25 @@ if [ -z "$PACKAGE_COUNT" ] || [ "$PACKAGE_COUNT" == "0" ]; then
 fi
 
 echo "Found $PACKAGE_COUNT package(s)"
+echo ""
+
+# Preview what will be deleted and require explicit confirmation.
+echo "The following snap-in package(s) will be deleted from $DEV_ORG ($DEVREV_ENV):"
+echo ""
+PREVIEW_INDEX=0
+while [ $PREVIEW_INDEX -lt $PACKAGE_COUNT ]; do
+    PREVIEW_SLUG=$(echo "$PACKAGES_ARRAY" | jq -r ".[$PREVIEW_INDEX].slug // \"(no slug)\"" 2>/dev/null)
+    PREVIEW_ID=$(echo "$PACKAGES_ARRAY" | jq -r ".[$PREVIEW_INDEX].id" 2>/dev/null)
+    PREVIEW_VER_COUNT=$(devrev snap_in_version list --package "$PREVIEW_ID" 2>/dev/null | grep -c .)
+    printf "  %-40s  %s  (%d version(s))\n" "$PREVIEW_SLUG" "$PREVIEW_ID" "$PREVIEW_VER_COUNT"
+    PREVIEW_INDEX=$((PREVIEW_INDEX + 1))
+done
+echo ""
+read -r -p "Delete $PACKAGE_COUNT snap-in package(s) and their version(s)? [y/N]: " CONFIRM
+if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+    echo "Aborted."
+    exit 0
+fi
 echo ""
 
 # Process each package
