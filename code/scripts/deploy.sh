@@ -89,12 +89,6 @@ get_ngrok_url() {
         | head -1
 }
 
-# Parse snap_in_package.id from captured devrev CLI output (may contain both
-# success lines for the package and an error line for the version).
-extract_package_id() {
-    echo "$1" | grep "snap_in_package" | grep -o '{.*}' | jq -r '.snap_in_package.id' 2>/dev/null | grep -v '^null$' | head -1
-}
-
 # Best-effort delete of a snap-in package; used for orphan cleanup after SIV failure.
 cleanup_package() {
     local pkg_id="$1"
@@ -160,15 +154,6 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     fi
 fi
 
-# Clean install of dependencies to guarantee a reproducible build/package
-echo "Running npm ci..."
-cd "$CODE_DIR" || exit 1
-if ! npm ci; then
-    error "npm ci failed"
-    exit 1
-fi
-cd "$PROJECT_ROOT" || exit 1
-
 # Load .env from code/ (optional, provides defaults)
 ENV_FILE="$CODE_DIR/.env"
 if [ -f "$ENV_FILE" ]; then
@@ -196,16 +181,54 @@ fi
 DEVREV_ENV="${ENV:-prod}"
 
 echo ""
-# Authenticate
-echo "Authenticating as $USER_EMAIL into $DEV_ORG ($DEVREV_ENV)..."
-devrev profiles authenticate --env "$DEVREV_ENV" --usr "$USER_EMAIL" --org "$DEV_ORG" --expiry 5
+# Skip authenticate if the stored token for this env/org/user is still valid.
+EXPIRY_RAW=$(devrev profiles get-token expiry --env "$DEVREV_ENV" --org "$DEV_ORG" --usr "$USER_EMAIL" 2>/dev/null)
+EXPIRY_EPOCH=""
+if [ -n "$EXPIRY_RAW" ]; then
+    # GNU date first (Linux), then BSD date (macOS) with a couple of format fallbacks
+    # for the CLI's "YYYY-MM-DD HH:MM:SS.fff +ZZZZ TZ" shape.
+    EXPIRY_EPOCH=$(date -d "$EXPIRY_RAW" +%s 2>/dev/null \
+        || date -j -f "%Y-%m-%d %H:%M:%S.%N %z %Z" "$EXPIRY_RAW" +%s 2>/dev/null \
+        || date -j -f "%Y-%m-%d %H:%M:%S" "${EXPIRY_RAW%% +*}" +%s 2>/dev/null)
+fi
+NOW_EPOCH=$(date +%s)
 
-if [ $? -ne 0 ]; then
-    error "DevRev authentication failed"
+if [ -n "$EXPIRY_EPOCH" ] && [ "$EXPIRY_EPOCH" -gt "$NOW_EPOCH" ]; then
+    success "Already authenticated as $USER_EMAIL into $DEV_ORG ($DEVREV_ENV) — token valid until $EXPIRY_RAW"
+else
+    echo "Authenticating as $USER_EMAIL into $DEV_ORG ($DEVREV_ENV)..."
+    if ! devrev profiles authenticate --env "$DEVREV_ENV" --usr "$USER_EMAIL" --org "$DEV_ORG" --expiry 5; then
+        error "DevRev authentication failed"
+        exit 1
+    fi
+    success "Authenticated"
+fi
+echo ""
+
+# Prompt for snap-in package slug (defaults to airdrop-<unix-epoch>, user can press Enter)
+DEFAULT_SLUG="airdrop-$(date +%s)"
+SIP_SLUG=$(prompt_with_default "Enter snap-in package slug" "$DEFAULT_SLUG")
+if [ -z "$SIP_SLUG" ]; then
+    error "Snap-in package slug is required"
     exit 1
 fi
+echo ""
 
-success "Authenticated"
+# Create the snap-in package up front so both local and lambda paths share one creation step.
+echo "Creating snap-in package with slug: $SIP_SLUG"
+SIP_CREATE_OUTPUT=$(devrev snap_in_package create-one --slug "$SIP_SLUG" 2>&1)
+SIP_CREATE_EXIT=$?
+SIP_ID=$(echo "$SIP_CREATE_OUTPUT" | grep "snap_in_package" | grep -o '{.*}' | jq -r '.snap_in_package.id' 2>/dev/null | grep -v '^null$' | head -1)
+
+if [ $SIP_CREATE_EXIT -ne 0 ] || [ -z "$SIP_ID" ]; then
+    error "Failed to create snap-in package"
+    echo ""
+    echo "=== devrev CLI output ==="
+    echo "$SIP_CREATE_OUTPUT"
+    echo "========================="
+    exit 1
+fi
+success "Snap-in package created: $SIP_ID"
 echo ""
 
 # LOCAL DEPLOYMENT
@@ -264,6 +287,7 @@ if [ "$DEPLOY_MODE" = "local" ]; then
                 echo ""
                 echo "If you see an auth error, run: ngrok config add-authtoken YOUR_AUTH_TOKEN"
                 echo "Get your authtoken at: https://dashboard.ngrok.com/get-started/your-authtoken"
+                cleanup_package "$SIP_ID"
                 exit 1
             fi
             echo "Waiting for ngrok... ($i/20)"
@@ -276,6 +300,7 @@ if [ "$DEPLOY_MODE" = "local" ]; then
             echo "  - Port 4040 blocked by firewall"
             echo "  - Try running 'ngrok http 8000' manually to see the error"
             rm -f "$NGROK_LOG" 2>/dev/null
+            cleanup_package "$SIP_ID"
             exit 1
         fi
     fi
@@ -283,11 +308,11 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     success "ngrok ready: $NGROK_URL"
     echo ""
 
-    # Create snap-in version with testing URL.
-    # Capture output so we can surface the real CLI error and cleanup an orphan SIP on failure.
+    # Create snap-in version against the SIP we just created.
+    # On failure, surface the real CLI error and delete the orphan SIP.
     echo "Creating snap-in version..."
     LOCAL_CREATE_LOG=$(mktemp)
-    devrev snap_in_version create-one --manifest ./manifest.yaml --create-package --testing-url "$NGROK_URL" 2>&1 | tee "$LOCAL_CREATE_LOG"
+    devrev snap_in_version create-one --manifest ./manifest.yaml --package "$SIP_ID" --testing-url "$NGROK_URL" 2>&1 | tee "$LOCAL_CREATE_LOG"
     CREATE_EXIT=${PIPESTATUS[0]}
 
     if [ $CREATE_EXIT -ne 0 ]; then
@@ -296,8 +321,7 @@ if [ "$DEPLOY_MODE" = "local" ]; then
         echo "=== devrev CLI output ==="
         cat "$LOCAL_CREATE_LOG"
         echo "========================="
-        ORPHAN_PKG=$(extract_package_id "$(cat "$LOCAL_CREATE_LOG")")
-        cleanup_package "$ORPHAN_PKG"
+        cleanup_package "$SIP_ID"
         rm -f "$LOCAL_CREATE_LOG"
         exit 1
     fi
@@ -347,15 +371,24 @@ fi
 if [ "$DEPLOY_MODE" = "lambda" ]; then
     cd "$CODE_DIR"
 
+    echo "Running npm ci..."
+    if ! npm ci; then
+        error "npm ci failed"
+        cleanup_package "$SIP_ID"
+        exit 1
+    fi
+
     echo "Building..."
     if ! npm run build; then
         error "Build failed"
+        cleanup_package "$SIP_ID"
         exit 1
     fi
 
     echo "Packaging..."
     if ! npm run package; then
         error "Package failed"
+        cleanup_package "$SIP_ID"
         exit 1
     fi
 
@@ -366,16 +399,13 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
     # Capture output while allowing interactive prompts
     TEMP_OUTPUT=$(mktemp)
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        script -q "$TEMP_OUTPUT" devrev snap_in_version create-one --path "." --create-package
+        script -q "$TEMP_OUTPUT" devrev snap_in_version create-one --path "." --package "$SIP_ID"
     else
-        script -q -c "devrev snap_in_version create-one --path '.' --create-package" "$TEMP_OUTPUT"
+        script -q -c "devrev snap_in_version create-one --path '.' --package '$SIP_ID'" "$TEMP_OUTPUT"
     fi
 
     VER_OUTPUT=$(cat "$TEMP_OUTPUT")
     rm -f "$TEMP_OUTPUT"
-
-    # A SIP may have been created even if SIV creation failed (--create-package is not atomic).
-    ORPHAN_PKG=$(extract_package_id "$VER_OUTPUT")
 
     FILTERED_OUTPUT=$(echo "$VER_OUTPUT" | grep "snap_in_version" | grep -o '{.*}')
 
@@ -385,7 +415,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
         echo "=== devrev CLI output ==="
         echo "$VER_OUTPUT"
         echo "========================="
-        cleanup_package "$ORPHAN_PKG"
+        cleanup_package "$SIP_ID"
         exit 1
     fi
 
@@ -397,7 +427,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
         echo "=== devrev CLI output ==="
         echo "$VER_OUTPUT"
         echo "========================="
-        cleanup_package "$ORPHAN_PKG"
+        cleanup_package "$SIP_ID"
         exit 1
     fi
 
@@ -413,7 +443,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
 
         if [ -z "$STATE" ] || [ "$STATE" == "null" ]; then
             error "Failed to get version status"
-            cleanup_package "$ORPHAN_PKG"
+            cleanup_package "$SIP_ID"
             exit 1
         fi
 
@@ -423,7 +453,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
         elif [[ "$STATE" == "build_failed" ]] || [[ "$STATE" == "deployment_failed" ]]; then
             REASON=$(echo "$VER_STATUS" | jq -r '.snap_in_version.failure_reason' 2>/dev/null)
             error "Build/deployment failed: $REASON"
-            cleanup_package "$ORPHAN_PKG"
+            cleanup_package "$SIP_ID"
             exit 1
         else
             echo "Status: $STATE, waiting..."
