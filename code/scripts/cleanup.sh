@@ -1,4 +1,5 @@
 #!/bin/bash
+# Script for cleaning up the organization from snap-in packages and versions.
 
 # Minimal colors
 RED='\033[0;31m'

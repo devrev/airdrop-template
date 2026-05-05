@@ -1,4 +1,5 @@
 #!/bin/bash
+# Script for deploying the snap-in to local or Lambda environment.
 
 # Minimal colors
 RED='\033[0;31m'
@@ -13,7 +14,7 @@ prompt_with_default() {
     local prompt="$1"
     local default="$2"
     local result
-    
+
     if [ -n "$default" ]; then
         read -p "$prompt [$default]: " result
         echo "${result:-$default}"
@@ -33,9 +34,9 @@ interactive_menu() {
     local options=("$@")
     local selected=$default
     local num_options=${#options[@]}
-    
+
     echo "$prompt"
-    
+
     display_options() {
         for i in "${!options[@]}"; do
             if [ $i -eq $selected ]; then
@@ -45,10 +46,10 @@ interactive_menu() {
             fi
         done
     }
-    
+
     tput civis
     display_options
-    
+
     while true; do
         read -rsn1 key
         if [[ $key == $'\x1b' ]]; then
@@ -63,7 +64,7 @@ interactive_menu() {
             break
         fi
     done
-    
+
     tput cnorm
     MENU_RESULT=$selected
 }
@@ -77,6 +78,29 @@ check_port() {
         ss -tlnp 2>/dev/null | grep ":$port " | grep -oP '(?<=pid=)\d+' | head -1
     elif command -v netstat &> /dev/null; then
         netstat -tlnp 2>/dev/null | grep ":$port " | awk '{print $7}' | cut -d'/' -f1 | head -1
+    fi
+}
+
+# Parse the first https tunnel URL from the ngrok local API.
+# Matches any ngrok domain (free, paid, custom static).
+get_ngrok_url() {
+    curl -s http://localhost:4040/api/tunnels 2>/dev/null \
+        | grep -oE 'https://[^"]+' \
+        | head -1
+}
+
+# Parse snap_in_package.id from captured devrev CLI output (may contain both
+# success lines for the package and an error line for the version).
+extract_package_id() {
+    echo "$1" | grep "snap_in_package" | grep -o '{.*}' | jq -r '.snap_in_package.id' 2>/dev/null | grep -v '^null$' | head -1
+}
+
+# Best-effort delete of a snap-in package; used for orphan cleanup after SIV failure.
+cleanup_package() {
+    local pkg_id="$1"
+    if [ -n "$pkg_id" ] && [ "$pkg_id" != "null" ]; then
+        echo "Cleaning up orphan snap-in package: $pkg_id"
+        devrev snap_in_package delete-one "$pkg_id" 2>&1 || echo "(package cleanup failed; you may need to delete $pkg_id manually)"
     fi
 }
 
@@ -122,10 +146,28 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-if [ "$DEPLOY_MODE" = "local" ] && ! command -v ngrok &> /dev/null; then
-    error "ngrok is not installed (required for local mode)"
+if [ "$DEPLOY_MODE" = "local" ]; then
+    if ! command -v ngrok &> /dev/null; then
+        error "ngrok is not installed (required for local mode)"
+        exit 1
+    fi
+    # Check if ngrok is configured with an authtoken
+    if ! ngrok config check &>/dev/null; then
+        error "ngrok is not configured with an authtoken"
+        echo "Run: ngrok config add-authtoken YOUR_AUTH_TOKEN"
+        echo "Get your authtoken at: https://dashboard.ngrok.com/get-started/your-authtoken"
+        exit 1
+    fi
+fi
+
+# Clean install of dependencies to guarantee a reproducible build/package
+echo "Running npm ci..."
+cd "$CODE_DIR" || exit 1
+if ! npm ci; then
+    error "npm ci failed"
     exit 1
 fi
+cd "$PROJECT_ROOT" || exit 1
 
 # Load .env from code/ (optional, provides defaults)
 ENV_FILE="$CODE_DIR/.env"
@@ -179,14 +221,14 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     # Check for existing ngrok
     NGROK_URL=""
     EXISTING_NGROK=$(pgrep -f "ngrok http")
-    
+
     if [ -n "$EXISTING_NGROK" ]; then
-        EXISTING_URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | grep -o 'https://[a-z0-9-]*\.ngrok-free\.app' | head -1)
+        EXISTING_URL=$(get_ngrok_url)
         if [ -n "$EXISTING_URL" ]; then
             echo "Found existing ngrok: $EXISTING_URL"
             NGROK_OPTIONS=("Yes - Reuse existing tunnel" "No  - Start new tunnel")
             interactive_menu "Reuse existing ngrok?" 0 "${NGROK_OPTIONS[@]}"
-            
+
             if [ "$MENU_RESULT" -eq 0 ]; then
                 NGROK_URL="$EXISTING_URL"
             else
@@ -202,21 +244,38 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     # Start ngrok as background process if needed
     if [ -z "$NGROK_URL" ]; then
         echo "Starting ngrok..."
-        ngrok http 8000 > /dev/null 2>&1 &
+        NGROK_LOG=$(mktemp)
+        ngrok http 8000 > "$NGROK_LOG" 2>&1 &
         NGROK_PID=$!
-        
+
         # Wait for ngrok to be ready
         for i in {1..20}; do
             sleep 2
-            NGROK_URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | grep -o 'https://[a-z0-9-]*\.ngrok-free\.app' | head -1)
+            NGROK_URL=$(get_ngrok_url)
             if [ -n "$NGROK_URL" ]; then
+                rm -f "$NGROK_LOG"
                 break
+            fi
+            # Check if ngrok process died
+            if ! kill -0 $NGROK_PID 2>/dev/null; then
+                error "ngrok process died. Output:"
+                cat "$NGROK_LOG"
+                rm -f "$NGROK_LOG"
+                echo ""
+                echo "If you see an auth error, run: ngrok config add-authtoken YOUR_AUTH_TOKEN"
+                echo "Get your authtoken at: https://dashboard.ngrok.com/get-started/your-authtoken"
+                exit 1
             fi
             echo "Waiting for ngrok... ($i/20)"
         done
 
         if [ -z "$NGROK_URL" ]; then
             error "Failed to start ngrok"
+            echo "Common causes:"
+            echo "  - ngrok not authenticated: ngrok config add-authtoken YOUR_TOKEN"
+            echo "  - Port 4040 blocked by firewall"
+            echo "  - Try running 'ngrok http 8000' manually to see the error"
+            rm -f "$NGROK_LOG" 2>/dev/null
             exit 1
         fi
     fi
@@ -224,14 +283,25 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     success "ngrok ready: $NGROK_URL"
     echo ""
 
-    # Create snap-in version with testing URL
+    # Create snap-in version with testing URL.
+    # Capture output so we can surface the real CLI error and cleanup an orphan SIP on failure.
     echo "Creating snap-in version..."
-    devrev snap_in_version create-one --manifest ./manifest.yaml --create-package --testing-url "$NGROK_URL"
+    LOCAL_CREATE_LOG=$(mktemp)
+    devrev snap_in_version create-one --manifest ./manifest.yaml --create-package --testing-url "$NGROK_URL" 2>&1 | tee "$LOCAL_CREATE_LOG"
+    CREATE_EXIT=${PIPESTATUS[0]}
 
-    if [ $? -ne 0 ]; then
+    if [ $CREATE_EXIT -ne 0 ]; then
         error "Failed to create snap-in version"
+        echo ""
+        echo "=== devrev CLI output ==="
+        cat "$LOCAL_CREATE_LOG"
+        echo "========================="
+        ORPHAN_PKG=$(extract_package_id "$(cat "$LOCAL_CREATE_LOG")")
+        cleanup_package "$ORPHAN_PKG"
+        rm -f "$LOCAL_CREATE_LOG"
         exit 1
     fi
+    rm -f "$LOCAL_CREATE_LOG"
 
     sleep 2
 
@@ -257,11 +327,20 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     success "Local deployment complete!"
     echo "ngrok URL: $NGROK_URL"
     echo ""
+
+    # Derive a slug from manifest.yaml name for the log filename.
+    PACKAGE_SLUG=$(grep -E '^name:' "$PROJECT_ROOT/manifest.yaml" | head -1 \
+        | sed -E 's/^name:[[:space:]]*//; s/^"(.*)"$/\1/; s/^'"'"'(.*)'"'"'$/\1/' \
+        | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed -E 's/^-+|-+$//g')
+    [ -z "$PACKAGE_SLUG" ] && PACKAGE_SLUG="snap-in"
+    LOG_FILE="/tmp/${PACKAGE_SLUG}-$(date +%Y%m%d-%H%M%S).log"
+
     echo "Starting test server (Ctrl+C to stop)..."
+    echo "Logs: $LOG_FILE"
     echo ""
 
     cd "$CODE_DIR"
-    npm run test:server -- local
+    npm run test:server -- local 2>&1 | tee "$LOG_FILE"
 fi
 
 # LAMBDA DEPLOYMENT
@@ -283,7 +362,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
     cd "$PROJECT_ROOT"
 
     echo "Creating snap-in version..."
-    
+
     # Capture output while allowing interactive prompts
     TEMP_OUTPUT=$(mktemp)
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -295,10 +374,18 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
     VER_OUTPUT=$(cat "$TEMP_OUTPUT")
     rm -f "$TEMP_OUTPUT"
 
+    # A SIP may have been created even if SIV creation failed (--create-package is not atomic).
+    ORPHAN_PKG=$(extract_package_id "$VER_OUTPUT")
+
     FILTERED_OUTPUT=$(echo "$VER_OUTPUT" | grep "snap_in_version" | grep -o '{.*}')
 
     if echo "$FILTERED_OUTPUT" | jq '.message' 2>/dev/null | grep -v null > /dev/null; then
         error "Failed to create snap-in version"
+        echo ""
+        echo "=== devrev CLI output ==="
+        echo "$VER_OUTPUT"
+        echo "========================="
+        cleanup_package "$ORPHAN_PKG"
         exit 1
     fi
 
@@ -306,6 +393,11 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
 
     if [ -z "$VERSION_ID" ] || [ "$VERSION_ID" == "null" ]; then
         error "Failed to get version ID"
+        echo ""
+        echo "=== devrev CLI output ==="
+        echo "$VER_OUTPUT"
+        echo "========================="
+        cleanup_package "$ORPHAN_PKG"
         exit 1
     fi
 
@@ -318,18 +410,20 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
     while true; do
         VER_STATUS=$(devrev snap_in_version show "$VERSION_ID" 2>/dev/null)
         STATE=$(echo "$VER_STATUS" | jq -r '.snap_in_version.state' 2>/dev/null)
-        
+
         if [ -z "$STATE" ] || [ "$STATE" == "null" ]; then
             error "Failed to get version status"
+            cleanup_package "$ORPHAN_PKG"
             exit 1
         fi
-        
+
         if [[ "$STATE" == "ready" ]]; then
             success "Version ready"
             break
         elif [[ "$STATE" == "build_failed" ]] || [[ "$STATE" == "deployment_failed" ]]; then
             REASON=$(echo "$VER_STATUS" | jq -r '.snap_in_version.failure_reason' 2>/dev/null)
             error "Build/deployment failed: $REASON"
+            cleanup_package "$ORPHAN_PKG"
             exit 1
         else
             echo "Status: $STATE, waiting..."
@@ -342,6 +436,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
 
     if echo "$DRAFT_OUTPUT" | jq '.message' 2>/dev/null | grep -v null > /dev/null; then
         error "Failed to create draft"
+        echo "$DRAFT_OUTPUT"
         exit 1
     fi
 
@@ -352,6 +447,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
 
     if echo "$ACTIVATE_OUTPUT" | jq '.message' 2>/dev/null | grep -v null > /dev/null; then
         error "Failed to activate snap-in"
+        echo "$ACTIVATE_OUTPUT"
         exit 1
     fi
 
