@@ -40,7 +40,7 @@ multi_select_menu() {
     done
 
     echo "$prompt"
-    echo "  (↑/↓ to navigate, space to toggle, Enter to confirm)"
+    echo "  (↑/↓ to navigate, space to toggle multiple, Enter to confirm current)"
 
     display_options() {
         for i in "${!options[@]}"; do
@@ -77,6 +77,14 @@ multi_select_menu() {
             tput cuu $num_options
             display_options
         elif [[ $key == "" ]]; then
+            # If nothing was toggled, treat Enter as "select the highlighted row".
+            local any_checked=0
+            for i in "${!checked[@]}"; do
+                [ "${checked[$i]}" -eq 1 ] && any_checked=1
+            done
+            if [ $any_checked -eq 0 ] && [ $num_options -gt 0 ]; then
+                checked[$cursor]=1
+            fi
             break
         fi
     done
