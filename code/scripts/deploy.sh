@@ -16,10 +16,10 @@ prompt_with_default() {
     local result
 
     if [ -n "$default" ]; then
-        read -p "$prompt [$default]: " result
+        read -rp "$prompt [$default]: " result
         echo "${result:-$default}"
     else
-        read -p "$prompt: " result
+        read -rp "$prompt: " result
         echo "$result"
     fi
 }
@@ -177,6 +177,11 @@ if [ -z "$USER_EMAIL" ]; then
     exit 1
 fi
 
+if [[ ! "$USER_EMAIL" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
+    error "User email is not a valid email address: $USER_EMAIL"
+    exit 1
+fi
+
 # Default to prod environment (can be overridden via ENV in .env)
 DEVREV_ENV="${ENV:-prod}"
 
@@ -205,8 +210,8 @@ else
 fi
 echo ""
 
-# Prompt for snap-in package slug (defaults to airdrop-<unix-epoch>, user can press Enter)
-DEFAULT_SLUG="airdrop-$(date +%s)"
+# Prompt for snap-in package slug (defaults to airdrop-YYYYMMDDHHMM, user can press Enter)
+DEFAULT_SLUG="airdrop-$(date +%Y%m%d%H%M)"
 SIP_SLUG=$(prompt_with_default "Enter snap-in package slug" "$DEFAULT_SLUG")
 if [ -z "$SIP_SLUG" ]; then
     error "Snap-in package slug is required"
@@ -371,31 +376,10 @@ fi
 
 # LAMBDA DEPLOYMENT
 if [ "$DEPLOY_MODE" = "lambda" ]; then
-    cd "$CODE_DIR"
-
-    echo "Running npm ci..."
-    if ! npm ci; then
-        error "npm ci failed"
-        cleanup_package "$SIP_ID"
-        exit 1
-    fi
-
-    echo "Building..."
-    if ! npm run build; then
-        error "Build failed"
-        cleanup_package "$SIP_ID"
-        exit 1
-    fi
-
-    echo "Packaging..."
-    if ! npm run package; then
-        error "Package failed"
-        cleanup_package "$SIP_ID"
-        exit 1
-    fi
-
     cd "$PROJECT_ROOT"
 
+    # devrev snap_in_version create-one --path . handles install, build, and packaging,
+    # so we skip running npm ci / build / package here.
     echo "Creating snap-in version..."
 
     # Capture output while allowing interactive prompts

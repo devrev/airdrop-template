@@ -16,10 +16,10 @@ prompt_with_default() {
     local result
     
     if [ -n "$default" ]; then
-        read -p "$prompt [$default]: " result
+        read -rp "$prompt [$default]: " result
         echo "${result:-$default}"
     else
-        read -p "$prompt: " result
+        read -rp "$prompt: " result
         echo "$result"
     fi
 }
@@ -135,6 +135,11 @@ fi
 
 if [ -z "$USER_EMAIL" ]; then
     error "User email is required"
+    exit 1
+fi
+
+if [[ ! "$USER_EMAIL" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
+    error "User email is not a valid email address: $USER_EMAIL"
     exit 1
 fi
 
