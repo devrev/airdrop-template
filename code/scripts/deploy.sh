@@ -355,14 +355,9 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     echo "ngrok URL: $NGROK_URL"
     echo ""
 
-    # Derive a slug from manifest.yaml name for the log filename.
-    PACKAGE_SLUG=$(grep -E '^name:' "$PROJECT_ROOT/manifest.yaml" | head -1 \
-        | sed -E 's/^name:[[:space:]]*//; s/^"(.*)"$/\1/; s/^'"'"'(.*)'"'"'$/\1/' \
-        | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed -E 's/^-+|-+$//g')
-    [ -z "$PACKAGE_SLUG" ] && PACKAGE_SLUG="snap-in"
     LOG_DIR="$CODE_DIR/logs"
     mkdir -p "$LOG_DIR"
-    LOG_FILE="$LOG_DIR/${PACKAGE_SLUG}-$(date +%Y%m%d-%H%M%S).log"
+    LOG_FILE="$LOG_DIR/${SIP_SLUG}.log"
 
     echo "Starting test server (Ctrl+C to stop)..."
     echo "Logs: $LOG_FILE"
