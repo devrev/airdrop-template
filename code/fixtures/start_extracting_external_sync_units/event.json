@@ -1,0 +1,11 @@
+{
+  "payload": {
+    "event_type": "START_EXTRACTING_EXTERNAL_SYNC_UNITS",
+    "connection_data": {
+      "org_id": "test_org",
+      "org_name": "Test Organization",
+      "key": "${TODO_API_KEY}",
+      "key_type": "pat"
+    }
+  }
+}

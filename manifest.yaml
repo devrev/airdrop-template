@@ -12,6 +12,21 @@ description: An Airdrop snap-in for syncing data between Todo and DevRev
 # You can change the display name value to your liking.
 service_account:
   display_name: Todo Bot
+  # Scopes needed for the Airdrop snap-in to work properly.
+  # scopes:
+  # self:
+  #   - scope: sync_mapper_record:write
+  #     optional: false
+  #     reason: "Allow write access to sync mapper records"
+  #   - scope: sync_mapper_record:read
+  #     optional: false
+  #     reason: "Allow read access to sync mapper records"
+  #   - scope: sync_unit:read
+  #     optional: false
+  #     reason: "Allow read access to sync units"
+  #   - scope: sync_snap_in:all
+  #     optional: false
+  #     reason: "Allow all access to sync snap ins"
 
 # Functions that the snap-in exposes.
 # The names of the functions should be in sync with their references in the 'imports' and

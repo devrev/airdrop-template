@@ -1,0 +1,54 @@
+name: Dependabot PR Description Updater
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  update-description:
+    runs-on: ubuntu-latest
+    # Only run for Dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+      contents: read
+    
+    steps:
+      - name: Update PR Body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const prTitle = context.payload.pull_request.title;
+
+            if (!prTitle.includes('@devrev/ts-adaas')) {
+              console.log('Skipping PR: Not a DevRev SDK update');
+              return;
+            }
+
+            // Fetch the existing PR to get the current body
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: number
+            });
+
+            const customText = `
+            ---
+            ## Summary
+            Dependabot: DevRev SDK update
+
+            *the issue number is there just to pass the CI check. it does not link to any existing issue.
+
+            ## Connected Issues
+            ISS-123456789123456789
+            `;
+
+            // Append to the existing body (preserves Dependabot's changelogs)
+            const newBody = `${pr.body}\n\n${customText}`;
+
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: number,
+              body: newBody
+            });
