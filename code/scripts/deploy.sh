@@ -335,20 +335,18 @@ if [ "$DEPLOY_MODE" = "local" ]; then
     sleep 2
 
     echo "Creating snap-in draft..."
-    devrev snap_in draft
-
-    if [ $? -ne 0 ]; then
+    if ! devrev snap_in draft; then
         error "Failed to create snap-in draft"
+        echo "Orphan snap-in package left behind: $SIP_ID (run 'npm run cleanup' to remove it)"
         exit 1
     fi
 
     sleep 2
 
     echo "Activating snap-in..."
-    devrev snap_in activate
-
-    if [ $? -ne 0 ]; then
+    if ! devrev snap_in activate; then
         error "Failed to activate snap-in"
+        echo "Orphan snap-in package left behind: $SIP_ID (run 'npm run cleanup' to remove it)"
         exit 1
     fi
 
@@ -453,6 +451,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
     if echo "$DRAFT_OUTPUT" | jq '.message' 2>/dev/null | grep -v null > /dev/null; then
         error "Failed to create draft"
         echo "$DRAFT_OUTPUT"
+        echo "Orphan snap-in package left behind: $SIP_ID (run 'npm run cleanup' to remove it)"
         exit 1
     fi
 
@@ -464,6 +463,7 @@ if [ "$DEPLOY_MODE" = "lambda" ]; then
     if echo "$ACTIVATE_OUTPUT" | jq '.message' 2>/dev/null | grep -v null > /dev/null; then
         error "Failed to activate snap-in"
         echo "$ACTIVATE_OUTPUT"
+        echo "Orphan snap-in package left behind: $SIP_ID (run 'npm run cleanup' to remove it)"
         exit 1
     fi
 

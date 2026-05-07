@@ -24,9 +24,10 @@ prompt_with_default() {
     fi
 }
 
-# Multi-select menu with arrow keys + space to toggle + Enter to confirm.
+# Multi-select menu. Space toggles [x] on the highlighted row; Enter confirms.
+# If Enter is pressed with nothing toggled, the highlighted row is used.
 # Arguments: $1=prompt, $2+=options
-# Returns: space-separated list of selected indices in SELECTED_INDICES (empty if none).
+# Returns: space-separated list of selected indices in SELECTED_INDICES.
 multi_select_menu() {
     local prompt="$1"
     shift
@@ -40,16 +41,16 @@ multi_select_menu() {
     done
 
     echo "$prompt"
-    echo "  (↑/↓ to navigate, space to toggle multiple, Enter to confirm current)"
+    echo "  Enter: delete marked (or highlighted if none)   Space: toggle   ↑↓: navigate"
 
     display_options() {
         for i in "${!options[@]}"; do
-            local mark="[ ]"
-            [ "${checked[$i]}" -eq 1 ] && mark="[x]"
+            local mark="    "
+            [ "${checked[$i]}" -eq 1 ] && mark="[x] "
             if [ $i -eq $cursor ]; then
-                echo -e "  ${GREEN}> ${mark} ${options[$i]}${NC}"
+                echo -e "  ${GREEN}> ${mark}${options[$i]}${NC}"
             else
-                echo "    ${mark} ${options[$i]}"
+                echo "    ${mark}${options[$i]}"
             fi
         done
     }
@@ -59,9 +60,11 @@ multi_select_menu() {
 
     while true; do
         local key
-        read -rsn1 key
+        # IFS= prevents `read` from stripping the space character (default IFS includes it),
+        # which would otherwise turn a Space keystroke into an empty string and match Enter.
+        IFS= read -rsn1 key
         if [[ $key == $'\x1b' ]]; then
-            read -rsn2 key
+            IFS= read -rsn2 key
             case $key in
                 '[A') [ $cursor -gt 0 ] && cursor=$((cursor - 1)) ;;
                 '[B') [ $cursor -lt $((num_options - 1)) ] && cursor=$((cursor + 1)) ;;
@@ -77,7 +80,6 @@ multi_select_menu() {
             tput cuu $num_options
             display_options
         elif [[ $key == "" ]]; then
-            # If nothing was toggled, treat Enter as "select the highlighted row".
             local any_checked=0
             for i in "${!checked[@]}"; do
                 [ "${checked[$i]}" -eq 1 ] && any_checked=1
@@ -98,6 +100,12 @@ multi_select_menu() {
         fi
     done
     SELECTED_INDICES="${SELECTED_INDICES# }"
+}
+
+# Normalize `devrev ... list` output into a JSON array, regardless of whether
+# the CLI emits JSONL (one object per line) or a single JSON array.
+normalize_list() {
+    jq -s 'map(if type == "array" then .[] else . end)'
 }
 
 # Find project root
@@ -171,17 +179,8 @@ fi
 echo "Cleaning up snap-in packages and versions..."
 echo ""
 
-# Get all packages (JSONL format)
-PACKAGES=$(devrev snap_in_package list 2>&1 | grep -v "listing")
-
-if [ -z "$PACKAGES" ]; then
-    echo "No snap-in packages found"
-    exit 0
-fi
-
-# Convert JSONL to JSON array, newest packages first.
-PACKAGES_ARRAY=$(echo "$PACKAGES" | jq -s 'sort_by(.created_date) | reverse' 2>/dev/null)
-PACKAGE_COUNT=$(echo "$PACKAGES_ARRAY" | jq 'length' 2>/dev/null)
+PACKAGES_ARRAY=$(devrev snap_in_package list 2>/dev/null | normalize_list | jq 'sort_by(.created_date) | reverse')
+PACKAGE_COUNT=$(echo "$PACKAGES_ARRAY" | jq 'length')
 
 if [ -z "$PACKAGE_COUNT" ] || [ "$PACKAGE_COUNT" == "0" ]; then
     echo "No snap-in packages found"
@@ -191,17 +190,11 @@ fi
 echo "Found $PACKAGE_COUNT package(s) in $DEV_ORG ($DEVREV_ENV)"
 echo ""
 
-# Build one row per package: "<slug>  <YYYY-MM-DD>  (N version(s))".
+# One jq pass: emit "<slug>\t<YYYY-MM-DD>" per package.
 LABELS=()
-LABEL_INDEX=0
-while [ $LABEL_INDEX -lt $PACKAGE_COUNT ]; do
-    LABEL_SLUG=$(echo "$PACKAGES_ARRAY" | jq -r ".[$LABEL_INDEX].slug // \"(no slug)\"" 2>/dev/null)
-    LABEL_ID=$(echo "$PACKAGES_ARRAY" | jq -r ".[$LABEL_INDEX].id" 2>/dev/null)
-    LABEL_DATE=$(echo "$PACKAGES_ARRAY" | jq -r ".[$LABEL_INDEX].created_date // \"\"" 2>/dev/null | cut -c1-10)
-    LABEL_VER_COUNT=$(devrev snap_in_version list --package "$LABEL_ID" 2>/dev/null | grep -c .)
-    LABELS+=("$(printf '%-40s  %s  (%d version(s))' "$LABEL_SLUG" "$LABEL_DATE" "$LABEL_VER_COUNT")")
-    LABEL_INDEX=$((LABEL_INDEX + 1))
-done
+while IFS=$'\t' read -r PKG_SLUG PKG_DATE; do
+    LABELS+=("$(printf '%-40s  %s' "$PKG_SLUG" "$PKG_DATE")")
+done < <(echo "$PACKAGES_ARRAY" | jq -r '.[] | [(.slug // "(no slug)"), ((.created_date // "") | .[0:10])] | @tsv')
 
 multi_select_menu "Select snap-in package(s) to delete:" "${LABELS[@]}"
 
@@ -210,21 +203,12 @@ if [ -z "$SELECTED_INDICES" ]; then
     exit 0
 fi
 
-# Build a compact slug list for the confirm prompt.
 SELECTED_SLUGS=()
 for PACKAGE_INDEX in $SELECTED_INDICES; do
-    SELECTED_SLUGS+=("$(echo "$PACKAGES_ARRAY" | jq -r ".[$PACKAGE_INDEX].slug // \"(no slug)\"" 2>/dev/null)")
+    SELECTED_SLUGS+=("$(echo "$PACKAGES_ARRAY" | jq -r ".[$PACKAGE_INDEX].slug // \"(no slug)\"")")
 done
 SELECTED_COUNT=${#SELECTED_SLUGS[@]}
-MAX_SHOWN=5
-if [ $SELECTED_COUNT -le $MAX_SHOWN ]; then
-    SLUG_DISPLAY=$(IFS=,; echo "${SELECTED_SLUGS[*]}" | sed 's/,/, /g')
-else
-    SHOWN=("${SELECTED_SLUGS[@]:0:$MAX_SHOWN}")
-    REMAINING=$((SELECTED_COUNT - MAX_SHOWN))
-    SLUG_DISPLAY=$(IFS=,; echo "${SHOWN[*]}" | sed 's/,/, /g')
-    SLUG_DISPLAY="$SLUG_DISPLAY, ... and $REMAINING more"
-fi
+SLUG_DISPLAY=$(IFS=, ; echo "${SELECTED_SLUGS[*]}" | sed 's/,/, /g')
 
 echo ""
 read -r -p "Delete $SELECTED_COUNT package(s): $SLUG_DISPLAY ? [y/N]: " CONFIRM
@@ -234,51 +218,38 @@ if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
 fi
 echo ""
 
-# Process each selected package
+# Run `devrev ... delete-one` quietly, but surface full CLI output on failure.
+run_delete() {
+    local label="$1"
+    shift
+    local output
+    if output=$("$@" 2>&1); then
+        success "Deleted $label"
+    else
+        error "Failed to delete $label"
+        echo "$output" | sed 's/^/    /'
+    fi
+}
+
 for PACKAGE_INDEX in $SELECTED_INDICES; do
-    PACKAGE_ID=$(echo "$PACKAGES_ARRAY" | jq -r ".[$PACKAGE_INDEX].id" 2>/dev/null)
+    PACKAGE_ID=$(echo "$PACKAGES_ARRAY" | jq -r ".[$PACKAGE_INDEX].id")
 
     if [ -z "$PACKAGE_ID" ] || [ "$PACKAGE_ID" == "null" ]; then
         continue
     fi
 
     echo "Package: $PACKAGE_ID"
-    
-    # Get versions for this package
-    VERSIONS=$(devrev snap_in_version list --package "$PACKAGE_ID" 2>&1 | grep -v "listing")
-    
-    if [ -n "$VERSIONS" ]; then
-        VERSIONS_ARRAY=$(echo "$VERSIONS" | jq -s '.' 2>/dev/null)
-        VERSION_COUNT=$(echo "$VERSIONS_ARRAY" | jq 'length' 2>/dev/null)
-        
-        if [ -n "$VERSION_COUNT" ] && [ "$VERSION_COUNT" != "0" ]; then
-            VERSION_INDEX=0
-            while true; do
-                VERSION_ID=$(echo "$VERSIONS_ARRAY" | jq -r ".[$VERSION_INDEX].id" 2>/dev/null)
-                
-                if [ -z "$VERSION_ID" ] || [ "$VERSION_ID" == "null" ]; then
-                    break
-                fi
-                
-                echo "  Deleting version: $VERSION_ID"
-                if devrev snap_in_version delete-one "$VERSION_ID" > /dev/null 2>&1; then
-                    success "  Deleted version"
-                else
-                    error "  Failed to delete version"
-                fi
-                
-                VERSION_INDEX=$((VERSION_INDEX + 1))
-            done
-        fi
-    fi
-    
+
+    # Delete versions first: `snap_in_package delete-one` fails while versions still reference it.
+    while read -r VERSION_ID; do
+        [ -z "$VERSION_ID" ] && continue
+        echo "  Deleting version: $VERSION_ID"
+        run_delete "version $VERSION_ID" devrev snap_in_version delete-one "$VERSION_ID"
+    done < <(devrev snap_in_version list --package "$PACKAGE_ID" 2>/dev/null | normalize_list | jq -r '.[].id')
+
     echo "  Deleting package: $PACKAGE_ID"
-    if devrev snap_in_package delete-one "$PACKAGE_ID" > /dev/null 2>&1; then
-        success "  Deleted package"
-    else
-        error "  Failed to delete package"
-    fi
-    
+    run_delete "package $PACKAGE_ID" devrev snap_in_package delete-one "$PACKAGE_ID"
+
     echo ""
 done
 
