@@ -29,7 +29,7 @@ export function normalizeTodo(item: ExternalTodo): NormalizedItem {
       creator: item.creator,
       owner: item.owner,
       title: item.title,
-      item_url_field: createItemUrl(item.id), // Url that points to the item in the external system. 
+      item_url_field: createItemUrl(item.id), // Url that points to the item in the external system.
     },
   };
 }
