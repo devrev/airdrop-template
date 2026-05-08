@@ -11,3 +11,6 @@
 # Node.js cache
 **/node_modules
 **/dist
+
+# Local deploy logs (written by code/scripts/deploy.sh)
+code/logs

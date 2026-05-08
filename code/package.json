@@ -4,6 +4,8 @@
   "description": "DevRev ADaaS (Airdrop-as-a-service) Connector",
   "main": "./dist/index.js",
   "scripts": {
+    "deploy": "./scripts/deploy.sh",
+    "cleanup": "./scripts/cleanup.sh",
     "lint": "eslint .",
     "lint:fix": "eslint --fix -- .",
     "build": "rimraf ./dist && tsc",

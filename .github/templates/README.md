@@ -1,105 +1,69 @@
-# Airdrop Todo snap-in
+# AirSync Todo snap-in
 
-The Airdrop Todo snap-in syncs data between Todo and DevRev using DevRev's Airdrop platform.
+Syncs data between Todo and DevRev using DevRev's AirSync platform.
 
 ## Prerequisites
 
-<!--
-The repository you just opened can be used in two ways, the easy way is through the use of
-[Dev Containers](https://containers.dev/) (which require Docker), or by manually installing all
-the required tools.
-See below on how to use the repository in either way.
-
-### Using Dev Containers
-
-The repository contains configuration for running in a [Dev Container](https://containers.dev/),
-which is the recommended way to develop Airdrop snap-ins, as it contains all the tools you will
-need and doesn't require you to install anything.
-
-Just install the
-[VSCode Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-(JetBrains IDEs already have their Dev Containers extension pre-installed) and open the project.
-The IDE should pick up that the configuration exists and offer to reopen the project in a Dev Container.
-
-If you're using Dev Containers, then run all the commands mentioned in this README from within VSCode (inside the
-Dev Container).
-
-### Manual Setup
--->
-
 Install the following tools:
 
+- [Node.js](https://nodejs.org/en/download/)
 - [DevRev CLI](https://developer.devrev.ai/snapin-development/references/cli-install)
 - [jq](https://jqlang.github.io/jq/download/)
-- [Node.js](https://nodejs.org/en/download/)
-- [ngrok](https://ngrok.com/download)
+- [ngrok](https://ngrok.com/download) (for local development)
 
-Set your DevRev organization slug (the part after `app.devrev.ai/` in your DevRev URL)
-and your email in the `.env` file:
+## Setup
+
+1. Navigate to the `code` directory:
+
+```sh
+cd code
+```
+
+2. Install dependencies:
+
+```sh
+npm ci
+```
+
+3. (Optional) Create a `.env` file to set default values for the prompts:
+
+```sh
+cp .env.example .env
+```
+
+Edit `.env` with your DevRev organization slug and email:
 
 ```ini
 DEV_ORG=my-org
 USER_EMAIL=my@email.com
 ```
 
-## Getting Started
+These values will be used as defaults when the scripts prompt you for credentials.
 
-After installing the prerequisites above <!-- or opening the project in a Dev Container, -->
-you can start developing the snap-in.
-Run the following code from the `code` directory:
+## Deploy
 
-##### 1. Authenticate to your DevRev organization using the DevRev CLI
+Run the deployment script:
 
 ```sh
-devrev profiles authenticate --usr <your email> --org <your DevRev organization slug>
+npm run deploy
 ```
 
-##### 2. Install NPM dependencies
+The script will prompt you for:
+
+1. **Deployment mode**: Local (ngrok) or Lambda
+2. **Organization**: Your DevRev org slug (defaults to `.env` value if set)
+3. **Email**: Your DevRev email (defaults to `.env` value if set)
+
+## Cleanup
+
+Remove all snap-in packages and versions from your organization:
 
 ```sh
-npm ci
+npm run cleanup
 ```
 
-##### 3. Start the snap-in development server
+The script will prompt you for organization and email credentials.
 
-```sh
-npm run test:server -- local
-```
+## Start an Import
 
-##### 4. Start the ngrok tunnel in a separate terminal window <!-- (inside VSCode)-->
-
-For this step, you will need to [create a ngrok account](https://dashboard.ngrok.com/signup).
-
-```sh
-ngrok http 8000
-```
-
-This will create a tunnel to your local server.
-The ngrok forwarding URL will be displayed in the terminal window.
-
-##### 5. Create a new snap-in version and package in a separate terminal window <!-- (inside VSCode) -->
-
-Copy the ngrok 'Forwarding' URL from the previous step (the one ending with `ngrok-free.app`).
-
-```sh
-devrev snap_in_version create-one  --manifest ./manifest.yaml --create-package --testing-url <ngrok forwarding URL>
-```
-
-##### 6. Create a snap-in draft
-
-```sh
-devrev snap_in draft
-```
-
-##### 7. Install the snap-in
-
-You can install it in the DevRev UI by going to `Settings` -> `Snap-ins` ->
-`Installed` -> `<your snap-in>` -> `Install snap-in` or using the following command:
-
-```sh
-devrev snap_in activate
-```
-
-##### 8. Start the import
-
-In the DevRev UI, go to `Airdrops` -> `Start Airdrop` -> `<your snap-in>` and start the import.
+After deploying, go to DevRev UI: `AirSync` > `Start AirSync` > `<your snap-in>`
