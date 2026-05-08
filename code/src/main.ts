@@ -17,6 +17,7 @@ import { testRunner } from './test-runner/test-runner';
 
   if (!argv.fixturePath) {
     console.error('Please make sure you have fixturePath in your command');
+    throw new Error(`fixturePath not specified!`);
   }
 
   await testRunner({

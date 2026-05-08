@@ -94,7 +94,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
 
   if (!resolvedFunctionName) {
     throw new Error(
-      'No function name provided. Either pass --functionName on the CLI ' + 'or set "function_name" in event.json.'
+      'No function name provided. Pass --functionName on the CLI'
     );
   }
 
