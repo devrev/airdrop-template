@@ -5,13 +5,13 @@ version: "2"
 # For more information about manifests, see https://developer.devrev.ai/public/snapin-development/references/manifest.
 
 # General information about the snap-in, which you can change to your liking.
-name: Todo
-description: An Airdrop snap-in for syncing data between Todo and DevRev
+name: Connector
+description: An Airdrop snap-in template for syncing data into DevRev
 
 # The name of the service account that your snap-in will use in DevRev.
 # You can change the display name value to your liking.
 service_account:
-  display_name: Todo Bot
+  display_name: Connector Bot
   # Scopes needed for the Airdrop snap-in to work properly.
   scopes:
     self:
@@ -34,26 +34,26 @@ service_account:
 # You can freely change the descriptions of the functions.
 functions:
   - name: extraction
-    description: Airdrop extraction function for Todo
+    description: Airdrop extraction function
   - name: loading
-    description: Airdrop loading function for Todo
+    description: Airdrop loading function
 
 # The types of connections that the snap-in supports.
 # If an external system supports OAuth, then you should use that.
-# Here we have just one example of a keyring, you can see more advanced examples
-# at https://github.com/devrev/snap-in-examples/tree/main/13-keyring-type.
+  # Here we have just one example of a keyring, you can see more advanced examples
+  # at https://github.com/devrev/snap-in-examples/tree/main/13-keyring-type.
 keyring_types:
   # The keyring type ID can be whatever you want, but it has to match one of the allowed
   # connection types in the 'imports' section below.
   - id: example-pat-connection
 
-    # Connection details that are showed when creating a connection in the DevRev app.
-    # You can freely change them, but the external system name should have the first letter capitalized.
-    name: Todo Connection
-    description: Connection details for authenticating with Todo
-    external_system_name: Todo
+    # Connection details that are shown when creating a connection in the DevRev app.
+    # You can freely change them, but the source system name should have the first letter capitalized.
+    name: Connector Connection
+    description: Connection details for authenticating with the source system
+    external_system_name: Connector
 
-    # Configuration for passing the secret to the external system, if necessary.
+    # Configuration for passing the secret to the source system, if necessary.
     # See https://github.com/devrev/snap-in-examples/blob/main/13-keyring-type/custom-keyring-type-basic.yaml
     # for more info on how the secret config should look like and what these fields mean.
     kind: "Secret"
@@ -66,23 +66,21 @@ keyring_types:
           description: Example API token
 
       # Airdrop will call the URL you set with the token to verify its validity.
-      # You need to specify an endpoint in your external system that requires authentication
-      # and ideally also checks if the token has all the required scopes.
-      # TODO: Update the token verification URL to use an actual authenticated endpoint of your external system.
+      # TODO: Update the token verification URL to use an authenticated endpoint.
       token_verification:
         url: https://app.devrev.ai/favicon.ico
         method: GET
 
-# Imports define the external systems that the snap-in will sync data from.
+# Imports define the source systems that the snap-in will sync data from.
 imports:
   # The slug is the machine-readable name for the import.
   # In the example below, it's automatically taken from the repository name if you used the template.
-  - slug: airdrop-todo-snap-in
-    display_name: Todo
-    description: Import data from Todo using Airdrop
+  - slug: airdrop-connector-snap-in
+    display_name: Connector
+    description: Import data using Airdrop
 
     # The extractor and loader functions specify which functions from the section
-    # 'functions' above should be called when extracting data from an external
+    # 'functions' above should be called when extracting data from a source
     # system, or loading data into it.
     # Make sure these are in sync with the function names in the 'functions' section above
     # and with your code, if you changed the names.
@@ -90,17 +88,11 @@ imports:
 
     loader_function: loading
 
-    # The list of connection types that are available for the external system.
+    # The list of connection types that are available for the source system.
     # Make sure these are in sync with the keyring types in the 'keyring_types' section above.
     allowed_connection_types:
       - example-pat-connection
 
     # The list of capabilities that the snap-in supports.
     # capabilities:
-    # TODO: Uncomment if your snap-in supports time-scoped syncs.
-    # Use this only when your external API can honor a time window.
-    # The platform resolves `extraction_start_time` / `extraction_end_time` into
-    # `adapter.event.payload.event_context.extract_from` / `extract_to`; pass
-    # those values through to your external query layer instead of filtering
-    # mock data in the connector itself.
     # - TIME_SCOPED_SYNCS

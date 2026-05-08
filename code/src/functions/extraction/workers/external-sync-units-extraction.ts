@@ -20,16 +20,10 @@ processTask({
       },
     ]);
 
-    // TODO: Replace with HTTP client that will be used to make API calls
-    // to the external system.
     const httpClient = new HttpClient(adapter.event);
 
-    // TODO: Replace with actual API call to fetch external sync units.
     const todoLists = await httpClient.getTodoLists();
 
-    // TODO: Normalize the data received from the API call to match the
-    // ExternalSyncUnit interface. Modify the normalization function to suit
-    // your needs.
     const externalSyncUnits: ExternalSyncUnit[] = todoLists.map((todoList) => normalizeTodoList(todoList));
 
     await adapter
