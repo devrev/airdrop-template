@@ -1,4 +1,4 @@
-// Connector data types used by the template
+// Custom system data types based on the structures returned by HttpClient
 
 export interface ExternalTodoList {
   id: string;

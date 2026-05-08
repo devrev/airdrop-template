@@ -1,6 +1,10 @@
 import { ExternalSyncUnit, NormalizedAttachment, NormalizedItem } from '@devrev/ts-adaas';
 import { ExternalAttachment, ExternalTodo, ExternalTodoList, ExternalUser } from './types';
 
+// TODO: Replace with your actual normalization functions that will be used to
+// normalize the data received from the external system. You can modify the
+// normalization functions to suit your needs. For example, you might want to
+// include additional fields or change the structure of the normalized item.
 export function normalizeTodoList(item: ExternalTodoList): ExternalSyncUnit {
   return {
     id: item.id,
@@ -12,7 +16,9 @@ export function normalizeTodoList(item: ExternalTodoList): ExternalSyncUnit {
 }
 
 export function normalizeTodo(item: ExternalTodo): NormalizedItem {
-  const createItemUrl = (id: string) => `https://example.com/todos/${id}`;
+  // createItemUrl function returns the url that points to this item in the external system.
+  // TODO: Adjust this function to your external system.
+  const createItemUrl = (id: string) => `https://external-system.com/todos/${id}`;
 
   return {
     id: item.id,
@@ -23,7 +29,7 @@ export function normalizeTodo(item: ExternalTodo): NormalizedItem {
       creator: item.creator,
       owner: item.owner,
       title: item.title,
-      item_url_field: createItemUrl(item.id),
+      item_url_field: createItemUrl(item.id), // Url that points to the item in the external system. 
     },
   };
 }
