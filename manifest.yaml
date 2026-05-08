@@ -48,12 +48,12 @@ keyring_types:
   - id: example-pat-connection
 
     # Connection details that are shown when creating a connection in the DevRev app.
-    # You can freely change them, but the source system name should have the first letter capitalized.
+    # You can freely change them, but the external system name should have the first letter capitalized.
     name: Todo Connection
     description: Connection details for authenticating with Todo
     external_system_name: Todo
 
-    # Configuration for passing the secret to the source system, if necessary.
+    # Configuration for passing the secret to the external system, if necessary.
     # See https://github.com/devrev/snap-in-examples/blob/main/13-keyring-type/custom-keyring-type-basic.yaml
     # for more info on how the secret config should look like and what these fields mean.
     kind: "Secret"
@@ -71,7 +71,7 @@ keyring_types:
         url: https://app.devrev.ai/favicon.ico
         method: GET
 
-# Imports define the source systems that the snap-in will sync data from.
+# Imports define the external systems that the snap-in will sync data from.
 imports:
   # The slug is the machine-readable name for the import.
   # In the example below, it's automatically taken from the repository name if you used the template.
@@ -80,7 +80,7 @@ imports:
     description: Import data from Todo using Airdrop
 
     # The extractor and loader functions specify which functions from the section
-    # 'functions' above should be called when extracting data from a source
+    # 'functions' above should be called when extracting data from an external
     # system, or loading data into it.
     # Make sure these are in sync with the function names in the 'functions' section above
     # and with your code, if you changed the names.
@@ -88,7 +88,7 @@ imports:
 
     loader_function: loading
 
-    # The list of connection types that are available for the source system.
+    # The list of connection types that are available for the external system.
     # Make sure these are in sync with the keyring types in the 'keyring_types' section above.
     allowed_connection_types:
       - example-pat-connection
