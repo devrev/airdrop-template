@@ -40,14 +40,14 @@ functions:
 
 # The types of connections that the snap-in supports.
 # If an external system supports OAuth, then you should use that.
-# Here we have just one example of a keyring, you can see more advanced examples
-# at https://github.com/devrev/snap-in-examples/tree/main/13-keyring-type.
+  # Here we have just one example of a keyring, you can see more advanced examples
+  # at https://github.com/devrev/snap-in-examples/tree/main/13-keyring-type.
 keyring_types:
   # The keyring type ID can be whatever you want, but it has to match one of the allowed
   # connection types in the 'imports' section below.
   - id: example-pat-connection
 
-    # Connection details that are showed when creating a connection in the DevRev app.
+    # Connection details that are shown when creating a connection in the DevRev app.
     # You can freely change them, but the external system name should have the first letter capitalized.
     name: Todo Connection
     description: Connection details for authenticating with Todo
@@ -66,9 +66,7 @@ keyring_types:
           description: Example API token
 
       # Airdrop will call the URL you set with the token to verify its validity.
-      # You need to specify an endpoint in your external system that requires authentication
-      # and ideally also checks if the token has all the required scopes.
-      # TODO: Update the token verification URL to use an actual authenticated endpoint of your external system.
+      # TODO: Update the token verification URL to use an authenticated endpoint.
       token_verification:
         url: https://app.devrev.ai/favicon.ico
         method: GET
@@ -88,8 +86,7 @@ imports:
     # and with your code, if you changed the names.
     extractor_function: extraction
 
-    # TODO: Uncomment the loader function once you have implemented loading.
-    #loader_function: loading
+    loader_function: loading
 
     # The list of connection types that are available for the external system.
     # Make sure these are in sync with the keyring types in the 'keyring_types' section above.
@@ -98,5 +95,4 @@ imports:
 
     # The list of capabilities that the snap-in supports.
     # capabilities:
-    # TODO: Uncomment if your snap-in supports time-scoped syncs.
     # - TIME_SCOPED_SYNCS

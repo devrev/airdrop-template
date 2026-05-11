@@ -94,7 +94,7 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
 
   if (!resolvedFunctionName) {
     throw new Error(
-      'No function name provided. Either pass --functionName on the CLI ' + 'or set "function_name" in event.json.'
+      'No function name provided. Pass --functionName on the CLI'
     );
   }
 
@@ -120,17 +120,27 @@ async function runWithFixtureDir(fixturesDir: string, functionName?: FunctionFac
     path: '/worker_data_url.get',
     method: 'GET',
     status: 200,
-    body: { state: JSON.stringify(fixtureState ?? {}), objects: JSON.stringify(fixtureExtractionScope ?? {}) },
+    body: {
+      state: JSON.stringify(fixtureState ?? {}),
+      objects: JSON.stringify(fixtureExtractionScope ?? {}),
+    },
   });
+
   if (fixtureState) {
     console.log(`[test-runner] Injected state from state.json`);
   } else {
     console.log(`[test-runner] No state.json found — using default empty state`);
   }
 
+  if (fixtureExtractionScope) {
+    console.log(`[test-runner] Injected extraction scope from extraction_scope.json`);
+  } else {
+    console.log(`[test-runner] No extraction_scope.json found — using default all-extract scope`);
+  }
+
   const event = createMockEvent(mockServer.baseUrl, fixtureEvent);
 
-  process.argv.push("--local");
+  process.argv.push('--local');
 
   const run = functionFactory[resolvedFunctionName];
 

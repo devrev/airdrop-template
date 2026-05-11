@@ -52,7 +52,7 @@ processTask<ExtractorState>({
   task: async ({ adapter }) => {
     adapter.initializeRepos(repos);
 
-    // TODO: Replace with HTTP client that will be used to make API calls
+    // TODO: Replace with the HTTP client that will be used to make API calls
     // to the external system.
     const httpClient = new HttpClient(adapter.event);
 
@@ -61,9 +61,15 @@ processTask<ExtractorState>({
     // extract them, push them to the repo, and save the state.
     for (const itemTypeToExtract of itemTypesToExtract) {
       // If the worker is about to time out, exit early so that `onTimeout` can run and emit progress.
-      if(adapter.isTimeout) {
+      if (adapter.isTimeout) {
         return;
       }
+
+      if (!adapter.shouldExtract(itemTypeToExtract.name)) {
+        adapter.state[itemTypeToExtract.name].completed = true;
+        continue;
+      }
+
       const items = await itemTypeToExtract.extractFunction(httpClient);
       await adapter.getRepo(itemTypeToExtract.name)?.push(items);
       adapter.state[itemTypeToExtract.name].completed = true;
