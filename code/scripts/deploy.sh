@@ -210,6 +210,55 @@ else
 fi
 echo ""
 
+# Preflight the manifest against the target org so we fail fast BEFORE creating
+# a snap-in package. Both checks below match errors we've seen in practice, and
+# both otherwise fail after SIP creation (leaving an orphan).
+
+# 1. service_account.scopes must be present for airdrop snap-ins. The CLI validator
+#    returns: "validation failed: service_account.scopes is required by the snap-in
+#    to function". Minimal heuristic: manifest must mention a scopes: block and at
+#    least the sync_snap_in:all airdrop scope.
+if ! grep -qE "^[[:space:]]*scopes:" manifest.yaml || ! grep -q "sync_snap_in:all" manifest.yaml; then
+    error "manifest.yaml is missing service_account.scopes (airdrop requires the 4 scopes under service_account.scopes.self)"
+    exit 1
+fi
+
+# 2. Every developer_keyrings[].name in the manifest must already exist in the org.
+#    Missing keyring -> "no connection exists for type(s) devrev-snap-in-secret".
+# Parse keyring names without requiring yq: grab the "- name:" entries under the
+# developer_keyrings: block.
+MANIFEST_KEYRINGS=$(awk '
+    /^developer_keyrings:/ { in_block=1; next }
+    in_block && /^[^[:space:]-]/ { in_block=0 }
+    in_block && /^[[:space:]]*-[[:space:]]*name:[[:space:]]*/ {
+        sub(/^[[:space:]]*-[[:space:]]*name:[[:space:]]*/, "")
+        gsub(/["'\'']/, "")
+        print
+    }
+' manifest.yaml)
+
+if [ -n "$MANIFEST_KEYRINGS" ]; then
+    echo "Checking developer keyrings in $DEV_ORG..."
+    ORG_KEYRINGS=$(devrev developer_keyring list 2>/dev/null | jq -r '.keyrings[].name' 2>/dev/null)
+    MISSING_KEYRINGS=()
+    while IFS= read -r name; do
+        [ -z "$name" ] && continue
+        if ! grep -qx "$name" <<<"$ORG_KEYRINGS"; then
+            MISSING_KEYRINGS+=("$name")
+        fi
+    done <<<"$MANIFEST_KEYRINGS"
+
+    if [ ${#MISSING_KEYRINGS[@]} -gt 0 ]; then
+        error "Missing developer keyring(s) in org: ${MISSING_KEYRINGS[*]}"
+        echo "Create each one before re-running:"
+        echo "  echo '{\"client_id\":\"<ID>\",\"client_secret\":\"<SECRET>\"}' | devrev developer_keyring create oauth-secret <name>"
+        echo "  echo '<SECRET>' | devrev developer_keyring create snap-in-secret <name>"
+        exit 1
+    fi
+    success "All developer keyrings present in $DEV_ORG"
+    echo ""
+fi
+
 # Prompt for snap-in package slug (defaults to airdrop-YYYYMMDDHHMM, user can press Enter)
 DEFAULT_SLUG="airdrop-$(date +%Y%m%d%H%M)"
 SIP_SLUG=$(prompt_with_default "Enter snap-in package slug" "$DEFAULT_SLUG")
