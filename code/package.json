@@ -58,9 +58,9 @@
     "yargs": "^17.6.2"
   },
   "dependencies": {
-    "@devrev/ts-adaas": "1.19.4",
+    "@devrev/ts-adaas": "1.19.7",
     "@devrev/typescript-sdk": "1.1.63",
-    "axios": "^1.9.0",
+    "axios": "^1.16.0",
     "dotenv": "^16.0.3",
     "jiti": "2.5.1",
     "js-jsonl": "^1.1.1",
